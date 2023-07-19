@@ -1,12 +1,11 @@
 ﻿// CherryChess.cpp : Defines the entry point for the application.
 //
 
-#include "CherryChess.h"
-
-using namespace std;
+import std;
+import board;
 
 int main()
 {
-	cout << "Hello CMake." << endl;
+	std::cout << "Hello CMake." << std::endl;
 	return 0;
 }
