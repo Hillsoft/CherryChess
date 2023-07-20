@@ -4,62 +4,84 @@ import std;
 
 export namespace cherry {
 
-	enum Piece : char {
-		None = 0,
-		WhitePawn = 8,
-		WhiteRook = 9,
-		WhiteKnight = 10,
-		WhiteBishop = 11,
-		WhiteQueen = 12,
-		WhiteKing = 13,
-		BlackPawn = 16,
-		BlackRook = 17,
-		BlackKnight = 18,
-		BlackBishop = 19,
-		BlackQueen = 20,
-		BlackKing = 21,
+	enum PieceColor : char {
+		ColorNone = 0,
+		White = 1,
+		Black = 2
 	};
 
-	constexpr bool isWhite(Piece p) {
-		return p == WhitePawn
+	enum PieceType : char {
+		TypeNone = 0,
+		Pawn = 1,
+		Rook = 2,
+		Knight = 3,
+		Bishop = 4,
+		Queen = 5,
+		King = 6
+	};
+
+	enum Piece : char {
+		PieceNone = 0,
+		WhitePawn = 9,
+		WhiteRook = 10,
+		WhiteKnight = 11,
+		WhiteBishop = 12,
+		WhiteQueen = 13,
+		WhiteKing = 14,
+		BlackPawn = 17,
+		BlackRook = 18,
+		BlackKnight = 19,
+		BlackBishop = 20,
+		BlackQueen = 21,
+		BlackKing = 22,
+	};
+
+	constexpr PieceColor getPieceColor(Piece p) {
+		return (PieceColor)((char)p >> 3);
+
+		// Verbose implementation, if you don't trust the bit-hacking
+		if (p == WhitePawn
 			|| p == WhiteRook
 			|| p == WhiteKnight
 			|| p == WhiteBishop
 			|| p == WhiteQueen
-			|| p == WhiteKing;
-	}
-
-	constexpr bool isBlack(Piece p) {
-		return p == BlackPawn
+			|| p == WhiteKing) {
+			return PieceColor::White;
+		}
+		if (p == BlackPawn
 			|| p == BlackRook
 			|| p == BlackKnight
 			|| p == BlackBishop
 			|| p == BlackQueen
-			|| p == BlackKing;
+			|| p == BlackKing) {
+			return PieceColor::Black;
+		}
+		return PieceColor::ColorNone;
 	}
 
-	constexpr bool isPawn(Piece p) {
-		return p == WhitePawn || p == BlackPawn;
-	}
+	constexpr PieceType getPieceType(Piece p) {
+		return (PieceType)((char)p & 7);
 
-	constexpr bool isRook(Piece p) {
-		return p == WhiteRook || p == BlackRook;
-	}
-
-	constexpr bool isKnight(Piece p) {
-		return p == WhiteKnight || p == BlackKnight;
-	}
-
-	constexpr bool isBishop(Piece p) {
-		return p == WhiteBishop || p == BlackBishop;
-	}
-
-	constexpr bool isQueen(Piece p) {
-		return p == WhiteQueen || p == BlackQueen;
-	}
-
-	constexpr bool isKing(Piece p) {
-		return p == WhiteKing || p == BlackKing;
+		// Verbose implementation, if you don't trust the bit-hacking
+		if (p == WhitePawn || p == BlackPawn) {
+			return PieceType::Pawn;
+		}
+		if (p == WhiteRook || p == BlackRook) {
+			return PieceType::Rook;
+		}
+		if (p == WhiteKnight || p == BlackKnight) {
+			return PieceType::Knight;
+		}
+		if (p == WhiteBishop || p == BlackBishop) {
+			return PieceType::Bishop;
+		}
+		if (p == WhiteQueen || p == BlackQueen) {
+			return PieceType::Queen;
+		}
+		if (p == WhiteKing || p == BlackKing) {
+			return PieceType::King;
+		}
+		return PieceType::TypeNone;
 	}
 
 } // namespace cherry
@@ -69,7 +91,7 @@ struct ::std::formatter<cherry::Piece> : std::formatter<std::string_view> {
 	auto format(cherry::Piece i, std::format_context& ctx) {
 		std::string_view result = "";
 		switch (i) {
-		case cherry::Piece::None:
+		case cherry::Piece::PieceNone:
 			result = "-";
 			break;
 		case cherry::WhitePawn:
@@ -107,6 +129,56 @@ struct ::std::formatter<cherry::Piece> : std::formatter<std::string_view> {
 			break;
 		case cherry::BlackKing:
 			result = "k";
+			break;
+		}
+		return std::formatter<std::string_view>::format(result, ctx);
+	}
+};
+
+export template <>
+struct ::std::formatter<cherry::PieceType> : std::formatter<std::string_view> {
+	auto format(cherry::PieceType i, std::format_context& ctx) {
+		std::string_view result = "";
+		switch (i) {
+		case cherry::PieceType::TypeNone:
+			result = "-";
+			break;
+		case cherry::Pawn:
+			result = "Pawn";
+			break;
+		case cherry::Rook:
+			result = "Rook";
+			break;
+		case cherry::Knight:
+			result = "Knight";
+			break;
+		case cherry::Bishop:
+			result = "Bishop";
+			break;
+		case cherry::Queen:
+			result = "Queen";
+			break;
+		case cherry::King:
+			result = "King";
+			break;
+		}
+		return std::formatter<std::string_view>::format(result, ctx);
+	}
+};
+
+export template <>
+struct ::std::formatter<cherry::PieceColor> : std::formatter<std::string_view> {
+	auto format(cherry::PieceColor i, std::format_context& ctx) {
+		std::string_view result = "";
+		switch (i) {
+		case cherry::PieceColor::ColorNone:
+			result = "-";
+			break;
+		case cherry::PieceColor::White:
+			result = "White";
+			break;
+		case cherry::PieceColor::Black:
+			result = "Black";
 			break;
 		}
 		return std::formatter<std::string_view>::format(result, ctx);

@@ -37,7 +37,7 @@ export namespace cherry {
 				if ('0' <= currentPiece && currentPiece <= '9') {
 					// We have a skip
 					for (size_t j = 0; j < currentPiece - '0'; j++) {
-						pushSquare(Piece::None);
+						pushSquare(Piece::PieceNone);
 					}
 				}
 				else {

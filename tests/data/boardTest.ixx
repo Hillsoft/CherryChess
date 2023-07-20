@@ -7,7 +7,7 @@ import cherry.squareIndex;
 cherry::test::Test fenStartingPosition("FENStartingPosition", [](cherry::test::TestRunner& runner) {
 	cherry::Board const board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 	runner.expectEq(cherry::Piece::WhiteKing, board.at(cherry::SquareIndex("e1")));
-	runner.expectEq(cherry::Piece::None, board.at(cherry::SquareIndex("h6")));
+	runner.expectEq(cherry::Piece::PieceNone, board.at(cherry::SquareIndex("h6")));
 	runner.expectEq(true, board.whiteToPlay_);
 });
 

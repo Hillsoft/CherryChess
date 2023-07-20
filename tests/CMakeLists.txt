@@ -14,4 +14,5 @@ add_test(${test_name} ${test_name})
 endfunction()
 
 cherry_test(board_test "data/boardTest.ixx")
+cherry_test(piece_test "data/pieceTest.ixx")
 cherry_test(square_index_test "data/squareIndexTest.ixx")
