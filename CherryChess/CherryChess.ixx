@@ -2,7 +2,7 @@
 //
 
 import std;
-import board;
+import cherry.board;
 
 int main()
 {
