@@ -13,4 +13,5 @@ target_sources(${test_name} PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES "
 add_test(${test_name} ${test_name})
 endfunction()
 
-cherry_test(board_test "data/boardTest.ixx")
+cherry_test(board_test "data/board/boardTest.ixx")
+cherry_test(fen_test "data/board/fenTest.ixx")
