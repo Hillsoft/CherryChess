@@ -10,39 +10,39 @@ export namespace cherry {
 
 	class SquareIndex {
 	public:
-		SquareIndex(char rank, char file)
+		constexpr SquareIndex(char rank, char file)
 			: rawIndex_((7 - file) * 8 + rank) {
 			assert(rank >= 0 && rank < 8);
 			assert(file >= 0 && file < 8);
 		}
 
-		explicit SquareIndex(char rawIndex)
+		constexpr explicit SquareIndex(char rawIndex)
 			: rawIndex_(rawIndex) {
 			assert((rawIndex >= 0 && rawIndex < 64) || rawIndex == 127);
 		}
 
-		explicit SquareIndex(std::string_view code)
+		constexpr explicit SquareIndex(std::string_view code)
 			: SquareIndex(code[0] - 'a', code[1] - '1') {
 			assert(code.size() == 2);
 		}
 
-		bool operator==(const SquareIndex& other) const {
+		constexpr bool operator==(const SquareIndex& other) const {
 			return rawIndex_ == other.rawIndex_;
 		}
 
-		char getRank() const {
+		constexpr char getRank() const {
 			return 7 - rawIndex_ / 8;
 		}
 
-		char getFile() const {
+		constexpr char getFile() const {
 			return rawIndex_ % 8;
 		}
 
-		char getRawIndex() const {
+		constexpr char getRawIndex() const {
 			return rawIndex_;
 		}
 
-		std::string getCode() const {
+		constexpr std::string getCode() const {
 			std::array<char, 3> data = { 'a' + getFile(), '1' + getRank(), 0 };
 			return std::string(data.data());
 		}
@@ -51,7 +51,7 @@ export namespace cherry {
 		char rawIndex_;
 	};
 
-	SquareIndex nullSquareIndex(127);
+	constexpr SquareIndex nullSquareIndex(127);
 
 	enum Piece : char {
 		None = 0,
@@ -71,7 +71,7 @@ export namespace cherry {
 
 	class Board {
 	public:
-		explicit Board(std::string_view fen) {
+		constexpr explicit Board(std::string_view fen) {
 			size_t i;
 			size_t row = 0;
 
@@ -230,7 +230,7 @@ export namespace cherry {
 			}
 		}
 
-		Piece at(SquareIndex i) const {
+		constexpr Piece at(SquareIndex i) const {
 			return data_[i.getRawIndex()];
 		}
 
@@ -247,7 +247,7 @@ export namespace cherry {
 		short halfMoveClock_ = 0;
 	};
 
-	bool isWhite(Piece p) {
+	constexpr bool isWhite(Piece p) {
 		return p == WhitePawn
 			|| p == WhiteRook
 			|| p == WhiteKnight
@@ -256,7 +256,7 @@ export namespace cherry {
 			|| p == WhiteKing;
 	}
 
-	bool isBlack(Piece p) {
+	constexpr bool isBlack(Piece p) {
 		return p == BlackPawn
 			|| p == BlackRook
 			|| p == BlackKnight
@@ -265,27 +265,27 @@ export namespace cherry {
 			|| p == BlackKing;
 	}
 
-	bool isPawn(Piece p) {
+	constexpr bool isPawn(Piece p) {
 		return p == WhitePawn || p == BlackPawn;
 	}
 
-	bool isRook(Piece p) {
+	constexpr bool isRook(Piece p) {
 		return p == WhiteRook || p == BlackRook;
 	}
 
-	bool isKnight(Piece p) {
+	constexpr bool isKnight(Piece p) {
 		return p == WhiteKnight || p == BlackKnight;
 	}
 
-	bool isBishop(Piece p) {
+	constexpr bool isBishop(Piece p) {
 		return p == WhiteBishop || p == BlackBishop;
 	}
 
-	bool isQueen(Piece p) {
+	constexpr bool isQueen(Piece p) {
 		return p == WhiteQueen || p == BlackQueen;
 	}
 
-	bool isKing(Piece p) {
+	constexpr bool isKing(Piece p) {
 		return p == WhiteKing || p == BlackKing;
 	}
 
