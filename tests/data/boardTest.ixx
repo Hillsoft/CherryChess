@@ -1,6 +1,8 @@
 import std;
 import test;
-import board;
+
+import cherry.board;
+import cherry.squareIndex;
 
 cherry::test::Test fenStartingPosition("FENStartingPosition", [](cherry::test::TestRunner& runner) {
 	cherry::Board const board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");

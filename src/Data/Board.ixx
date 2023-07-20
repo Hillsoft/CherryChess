@@ -2,72 +2,14 @@ module;
 
 #include <assert.h>
 
-export module board;
+export module cherry.board;
 
 import std;
 
+import cherry.piece;
+import cherry.squareIndex;
+
 export namespace cherry {
-
-	class SquareIndex {
-	public:
-		constexpr SquareIndex(char rank, char file)
-			: rawIndex_((7 - file) * 8 + rank) {
-			assert(rank >= 0 && rank < 8);
-			assert(file >= 0 && file < 8);
-		}
-
-		constexpr explicit SquareIndex(char rawIndex)
-			: rawIndex_(rawIndex) {
-			assert((rawIndex >= 0 && rawIndex < 64) || rawIndex == 127);
-		}
-
-		constexpr explicit SquareIndex(std::string_view code)
-			: SquareIndex(code[0] - 'a', code[1] - '1') {
-			assert(code.size() == 2);
-		}
-
-		constexpr bool operator==(const SquareIndex& other) const {
-			return rawIndex_ == other.rawIndex_;
-		}
-
-		constexpr char getRank() const {
-			return 7 - rawIndex_ / 8;
-		}
-
-		constexpr char getFile() const {
-			return rawIndex_ % 8;
-		}
-
-		constexpr char getRawIndex() const {
-			return rawIndex_;
-		}
-
-		constexpr std::string getCode() const {
-			std::array<char, 3> data = { 'a' + getFile(), '1' + getRank(), 0 };
-			return std::string(data.data());
-		}
-
-	private:
-		char rawIndex_;
-	};
-
-	constexpr SquareIndex nullSquareIndex(127);
-
-	enum Piece : char {
-		None = 0,
-		WhitePawn = 8,
-		WhiteRook = 9,
-		WhiteKnight = 10,
-		WhiteBishop = 11,
-		WhiteQueen = 12,
-		WhiteKing = 13,
-		BlackPawn = 16,
-		BlackRook = 17,
-		BlackKnight = 18,
-		BlackBishop = 19,
-		BlackQueen = 20,
-		BlackKing = 21,
-	};
 
 	class Board {
 	public:
@@ -247,102 +189,4 @@ export namespace cherry {
 		short halfMoveClock_ = 0;
 	};
 
-	constexpr bool isWhite(Piece p) {
-		return p == WhitePawn
-			|| p == WhiteRook
-			|| p == WhiteKnight
-			|| p == WhiteBishop
-			|| p == WhiteQueen
-			|| p == WhiteKing;
-	}
-
-	constexpr bool isBlack(Piece p) {
-		return p == BlackPawn
-			|| p == BlackRook
-			|| p == BlackKnight
-			|| p == BlackBishop
-			|| p == BlackQueen
-			|| p == BlackKing;
-	}
-
-	constexpr bool isPawn(Piece p) {
-		return p == WhitePawn || p == BlackPawn;
-	}
-
-	constexpr bool isRook(Piece p) {
-		return p == WhiteRook || p == BlackRook;
-	}
-
-	constexpr bool isKnight(Piece p) {
-		return p == WhiteKnight || p == BlackKnight;
-	}
-
-	constexpr bool isBishop(Piece p) {
-		return p == WhiteBishop || p == BlackBishop;
-	}
-
-	constexpr bool isQueen(Piece p) {
-		return p == WhiteQueen || p == BlackQueen;
-	}
-
-	constexpr bool isKing(Piece p) {
-		return p == WhiteKing || p == BlackKing;
-	}
-
 } // namespace cherry
-
-export template <>
-struct ::std::formatter<cherry::SquareIndex> : std::formatter<std::string> {
-	auto format(cherry::SquareIndex i, std::format_context& ctx) {
-		return std::formatter<std::string>::format(i.getCode(), ctx);
-	}
-};
-
-export template <>
-struct ::std::formatter<cherry::Piece> : std::formatter<std::string_view> {
-	auto format(cherry::Piece i, std::format_context& ctx) {
-		std::string_view result = "";
-		switch (i) {
-		case cherry::Piece::None:
-			result = "-";
-			break;
-		case cherry::WhitePawn:
-			result = "P";
-			break;
-		case cherry::WhiteRook:
-			result = "R";
-			break;
-		case cherry::WhiteKnight:
-			result = "N";
-			break;
-		case cherry::WhiteBishop:
-			result = "B";
-			break;
-		case cherry::WhiteQueen:
-			result = "Q";
-			break;
-		case cherry::WhiteKing:
-			result = "K";
-			break;
-		case cherry::BlackPawn:
-			result = "p";
-			break;
-		case cherry::BlackRook:
-			result = "r";
-			break;
-		case cherry::BlackKnight:
-			result = "n";
-			break;
-		case cherry::BlackBishop:
-			result = "b";
-			break;
-		case cherry::BlackQueen:
-			result = "q";
-			break;
-		case cherry::BlackKing:
-			result = "k";
-			break;
-		}
-		return std::formatter<std::string_view>::format(result, ctx);
-	}
-};

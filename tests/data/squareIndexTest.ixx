@@ -1,6 +1,7 @@
 import std;
 import test;
-import board;
+
+import cherry.squareIndex;
 
 cherry::test::Test SquareIndexParsing("SquareIndexParsing", [](cherry::test::TestRunner& runner) {
 	runner.expectEq<std::string_view>("a1", cherry::SquareIndex("a1").getCode());
