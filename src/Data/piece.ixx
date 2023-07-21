@@ -84,6 +84,26 @@ export namespace cherry {
 		return PieceType::TypeNone;
 	}
 
+	constexpr std::string getPieceCode(PieceType t) {
+		switch (t) {
+		case PieceType::Pawn:
+			return "p";
+		case PieceType::Rook:
+			return "r";
+		case PieceType::Knight:
+			return "n";
+		case PieceType::Bishop:
+			return "b";
+		case PieceType::Queen:
+			return "q";
+		case PieceType::King:
+			return "k";
+		case PieceType::TypeNone:
+			return "";
+		}
+		return "";
+	}
+
 } // namespace cherry
 
 export template <>
