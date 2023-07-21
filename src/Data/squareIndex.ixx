@@ -25,9 +25,7 @@ export namespace cherry {
 			assert(code.size() == 2);
 		}
 
-		constexpr bool operator==(const SquareIndex& other) const {
-			return rawIndex_ == other.rawIndex_;
-		}
+		constexpr auto operator<=>(const SquareIndex& other) const = default;
 
 		constexpr char getRank() const {
 			return 7 - rawIndex_ / 8;
@@ -58,5 +56,12 @@ export template <>
 struct ::std::formatter<cherry::SquareIndex> : std::formatter<std::string> {
 	auto format(cherry::SquareIndex i, std::format_context& ctx) {
 		return std::formatter<std::string>::format(i.getCode(), ctx);
+	}
+};
+
+export template <>
+struct ::std::formatter<std::pair<cherry::SquareIndex, cherry::SquareIndex>> : std::formatter<std::string> {
+	auto format(std::pair<cherry::SquareIndex, cherry::SquareIndex> i, std::format_context& ctx) {
+		return std::formatter<std::string>::format(i.first.getCode() + "," + i.second.getCode(), ctx);
 	}
 };
