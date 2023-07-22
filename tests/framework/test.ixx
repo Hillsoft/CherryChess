@@ -20,6 +20,24 @@ export namespace cherry::test {
 		}
 
 		template<typename T>
+		void expectEq(std::vector<T> const& a, std::vector<T> const& b) {
+			if (a != b) {
+				auto fmtToString = [](T const& x) {
+					return std::format("{}", x);
+				};
+				std::ostringstream aRep;
+				std::vector<std::string> aStrs;
+				std::transform(a.begin(), a.end(), std::back_inserter(aStrs), fmtToString);
+				std::copy(aStrs.begin(), aStrs.end(), std::ostream_iterator<std::string>(aRep, ", "));
+				std::ostringstream bRep;
+				std::vector<std::string> bStrs;
+				std::transform(b.begin(), b.end(), std::back_inserter(bStrs), fmtToString);
+				std::copy(bStrs.begin(), bStrs.end(), std::ostream_iterator<std::string>(bRep, ", "));
+				errors_.push_back(std::format("Expected equality of:\n\t{}\n\t{}", aRep.str(), bRep.str()));
+			}
+		}
+
+		template<typename T>
 		void expectEq(const T& a, const T& b) {
 			if (a != b) {
 				errors_.push_back(std::format("Expected equality of {} and {}", a, b));
