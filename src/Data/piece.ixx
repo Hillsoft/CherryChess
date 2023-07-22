@@ -1,3 +1,7 @@
+module;
+
+#include <assert.h>
+
 export module cherry.piece;
 
 import std;
@@ -102,6 +106,28 @@ export namespace cherry {
 			return "";
 		}
 		return "";
+	}
+
+	constexpr PieceType fromPieceCode(std::string_view c) {
+		assert(c.size() == 0 || c.size() == 1);
+		if (c.size() == 0) {
+			return PieceType::TypeNone;
+		}
+		switch (c.at(0)) {
+		case 'p':
+			return PieceType::Pawn;
+		case 'r':
+			return PieceType::Rook;
+		case 'n':
+			return PieceType::Knight;
+		case 'b':
+			return PieceType::Bishop;
+		case 'q':
+			return PieceType::Queen;
+		case 'k':
+			return PieceType::King;
+		}
+		return PieceType::TypeNone;
 	}
 
 } // namespace cherry
