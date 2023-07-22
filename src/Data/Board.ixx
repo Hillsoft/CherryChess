@@ -172,8 +172,76 @@ export namespace cherry {
 			}
 		}
 
+		constexpr auto operator<=>(Board const& other) const = default;
+
 		constexpr Piece at(SquareIndex i) const {
 			return data_[i.getRawIndex()];
+		}
+
+		std::string getFEN() const {
+			std::ostringstream buffer;
+
+			auto writeRow = [&](short row) -> void {
+				short emptyRun = 0;
+				for (short index = row * 8; index < (row + 1) * 8; index++) {
+					assert(0 <= index && index < 64);
+					if (data_[index] == Piece::PieceNone) {
+						emptyRun++;
+					}
+					else {
+						if (emptyRun > 0) {
+							buffer << emptyRun;
+							emptyRun = 0;
+						}
+						buffer << std::format("{}", data_[index]);
+					}
+				}
+				if (emptyRun > 0) {
+					buffer << emptyRun;
+				}
+			};
+
+			writeRow(0);
+			buffer << '/';
+			writeRow(1);
+			buffer << '/';
+			writeRow(2);
+			buffer << '/';
+			writeRow(3);
+			buffer << '/';
+			writeRow(4);
+			buffer << '/';
+			writeRow(5);
+			buffer << '/';
+			writeRow(6);
+			buffer << '/';
+			writeRow(7);
+			buffer << ' ';
+			buffer << (whiteToPlay_ ? 'w' : 'b');
+			buffer << ' ';
+			if (!whiteKingsideCastle_ && !whiteQueensideCastle_ && !blackKingsideCastle_ && !blackQueensideCastle_)
+				buffer << '-';
+			if (whiteKingsideCastle_)
+				buffer << 'K';
+			if (whiteQueensideCastle_)
+				buffer << 'Q';
+			if (blackKingsideCastle_)
+				buffer << 'k';
+			if (blackQueensideCastle_)
+				buffer << 'q';
+			buffer << ' ';
+			if (enPassantTarget_ == nullSquareIndex)
+				buffer << '-';
+			else
+				buffer << enPassantTarget_.getCode();
+			buffer << ' ';
+			buffer << halfMoveClock_;
+			buffer << ' ';
+			buffer << 1;
+
+			// Returning this immediately seems to confuse MSVC...
+			std::string result = std::move(buffer).str();
+			return result;
 		}
 
 	private:
@@ -190,3 +258,10 @@ export namespace cherry {
 	};
 
 } // namespace cherry
+
+export template <>
+struct ::std::formatter<cherry::Board> : std::formatter<std::string> {
+	auto format(cherry::Board const& b, std::format_context& ctx) {
+		return std::formatter<std::string>::format(b.getFEN(), ctx);
+	}
+};
