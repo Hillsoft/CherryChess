@@ -21,6 +21,12 @@ enable_testing()
 
 project ("CherryChess")
 
+add_library(stdxx)
+if(DEFINED ENV{VCToolsInstallDir})
+target_sources(stdxx PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES "empty.ixx" )
+else()
+target_sources(stdxx PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES "std.ixx" )
+endif()
 
 # Include sub-projects.
 add_subdirectory ("src")
