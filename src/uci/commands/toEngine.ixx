@@ -6,6 +6,7 @@ export module cherry.uci.toEngine;
 
 import std;
 
+export import cherry.uci.cmd.isready;
 export import cherry.uci.cmd.quit;
 export import cherry.uci.cmd.uci;
 
@@ -48,11 +49,14 @@ export namespace cherry::uci {
 		ToEngineCommand(auto cmd)
 			: command_(std::move(cmd)) {}
 
-		std::variant<command::Quit, command::UCI> command_;
+		std::variant<command::IsReady, command::Quit, command::UCI> command_;
 	};
 
 	std::optional<ToEngineCommand> parseTokens(std::span<std::string_view> tokens) {
 		assert(tokens.size() > 0);
+		if (tokens[0] == "isready") {
+			return command::IsReady(tokens.subspan(1));
+		}
 		if (tokens[0] == "uci") {
 			return command::UCI(tokens.subspan(1));
 		}
