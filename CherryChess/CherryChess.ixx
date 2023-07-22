@@ -2,10 +2,10 @@
 //
 
 import std;
-import cherry.board;
+import cherry.uci.interfaceManager;
 
 int main()
 {
-	std::cout << "Hello CMake." << std::endl;
+	cherry::uci::InterfaceManager interfaceManager;
 	return 0;
 }
