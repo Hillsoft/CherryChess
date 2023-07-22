@@ -6,6 +6,7 @@ export module cherry.board;
 
 import std;
 
+import cherry.move;
 import cherry.piece;
 import cherry.squareIndex;
 
@@ -178,6 +179,80 @@ export namespace cherry {
 			return data_[i.getRawIndex()];
 		}
 
+		constexpr void makeMove(Move m) {
+			// Half-move clock
+			if (at(m.to_) != Piece::PieceNone || getPieceType(at(m.from_)) == PieceType::Pawn) {
+				halfMoveClock_ = 0;
+			}
+			else {
+				halfMoveClock_++;
+			}
+
+			// En passant
+			if (m.to_ == enPassantTarget_ && getPieceType(at(m.from_)) == PieceType::Pawn) {
+				char invStep = whiteToPlay_ == PieceColor::White ? 8 : -8;
+				data_[m.to_.getRawIndex() + invStep] = Piece::PieceNone;
+			}
+			if (getPieceType(at(m.from_)) == PieceType::Pawn && std::abs(m.from_.getRawIndex() - m.to_.getRawIndex()) == 16) {
+				enPassantTarget_ = SquareIndex((m.from_.getRawIndex() + m.to_.getRawIndex()) / 2);
+			}
+			else {
+				enPassantTarget_ = nullSquareIndex;
+			}
+
+			// Losing castling rights
+			if (m.from_ == SquareIndex("e1")) {
+				whiteKingsideCastle_ = false;
+				whiteQueensideCastle_ = false;
+			}
+			if (m.from_ == SquareIndex("e8")) {
+				blackKingsideCastle_ = false;
+				blackQueensideCastle_ = false;
+			}
+			if (m.from_ == SquareIndex("a1")) {
+				whiteQueensideCastle_ = false;
+			}
+			if (m.from_ == SquareIndex("h1")) {
+				whiteKingsideCastle_ = false;
+			}
+			if (m.from_ == SquareIndex("a8")) {
+				blackQueensideCastle_ = false;
+			}
+			if (m.from_ == SquareIndex("h8")) {
+				blackKingsideCastle_ = false;
+			}
+
+			// Move rook if castling
+			if (getPieceType(at(m.from_)) == PieceType::King) {
+				if (m.from_ == SquareIndex("e1") && m.to_ == SquareIndex("g1")) {
+					data_[SquareIndex("h1").getRawIndex()] = Piece::PieceNone;
+					data_[SquareIndex("f1").getRawIndex()] = Piece::WhiteRook;
+				}
+				if (m.from_ == SquareIndex("e1") && m.to_ == SquareIndex("c1")) {
+					data_[SquareIndex("a1").getRawIndex()] = Piece::PieceNone;
+					data_[SquareIndex("d1").getRawIndex()] = Piece::WhiteRook;
+				}
+				if (m.from_ == SquareIndex("e8") && m.to_ == SquareIndex("g8")) {
+					data_[SquareIndex("h8").getRawIndex()] = Piece::PieceNone;
+					data_[SquareIndex("f8").getRawIndex()] = Piece::BlackRook;
+				}
+				if (m.from_ == SquareIndex("e8") && m.to_ == SquareIndex("c8")) {
+					data_[SquareIndex("a8").getRawIndex()] = Piece::PieceNone;
+					data_[SquareIndex("d8").getRawIndex()] = Piece::BlackRook;
+				}
+			}
+
+			data_[m.to_.getRawIndex()] = data_[m.from_.getRawIndex()];
+			data_[m.from_.getRawIndex()] = Piece::PieceNone;
+
+			// Promotion
+			if (m.promotion_ != PieceType::TypeNone) {
+				data_[m.to_.getRawIndex()] = makePiece(getPieceColor(data_[m.to_.getRawIndex()]), m.promotion_);
+			}
+
+			whiteToPlay_ = !whiteToPlay_;
+		}
+
 		std::string getFEN() const {
 			std::ostringstream buffer;
 
@@ -256,6 +331,8 @@ export namespace cherry {
 		SquareIndex enPassantTarget_ = nullSquareIndex;
 		short halfMoveClock_ = 0;
 	};
+
+	constexpr Board startingPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
 } // namespace cherry
 
