@@ -21,9 +21,6 @@ enable_testing()
 
 project ("CherryChess")
 
-add_library(stdxx)
-target_sources(stdxx PUBLIC FILE_SET cxx_modules TYPE CXX_MODULES FILES "stdxx/std.ixx" )
-
 
 # Include sub-projects.
 add_subdirectory ("src")
