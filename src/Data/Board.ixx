@@ -173,6 +173,9 @@ export namespace cherry {
 			}
 		}
 
+		constexpr Board()
+			: Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {}
+
 		constexpr auto operator<=>(Board const& other) const = default;
 
 		constexpr Piece at(SquareIndex i) const {
