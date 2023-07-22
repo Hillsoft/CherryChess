@@ -40,6 +40,11 @@ export namespace cherry {
 		BlackKing = 22,
 	};
 
+	constexpr Piece makePiece(PieceColor c, PieceType t) {
+		assert((c != PieceColor::ColorNone && t != PieceColor::ColorNone) || (c == PieceColor::ColorNone && t == PieceType::TypeNone));
+		return (Piece)((char)t | ((char)c << 3));
+	}
+
 	constexpr PieceColor getPieceColor(Piece p) {
 		return (PieceColor)((char)p >> 3);
 
