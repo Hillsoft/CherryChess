@@ -11,7 +11,7 @@ export namespace cherry::uci::command {
 	public:
 		explicit Position(std::span<std::string_view> tokens) {
 			position_ = startingPosition;
-			if (tokens.size() < 3) {
+			if (tokens.size() < 1) {
 				throw std::runtime_error("Unsupported position command");
 			}
 			auto cursor = tokens.begin();
@@ -19,6 +19,9 @@ export namespace cherry::uci::command {
 				throw std::runtime_error("Unsupported position command");
 			}
 			cursor++;
+			if (cursor == tokens.end()) {
+				return;
+			}
 			if (*cursor != "moves") {
 				throw std::runtime_error("Unsupported position command");
 			}
