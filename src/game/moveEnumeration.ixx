@@ -194,4 +194,14 @@ namespace cherry {
 		return availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black, opponentTargets);
 	}
 
+	export bool isIllegalDueToCheck(Board const& board) {
+		std::vector<Move> currentMoves = availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black, {});
+		for (auto const& move : currentMoves) {
+			if (getPieceType(board.at(move.to_)) == PieceType::King) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 } // namespace

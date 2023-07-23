@@ -22,19 +22,24 @@ export namespace cherry {
 		}
 
 		std::pair<int, Move> bestResult(-1000000, Move());
-		{
-			Move move = possibleMoves[0];
+
+		auto cursor = possibleMoves.begin();
+		for (; cursor != possibleMoves.end() && bestResult.first == -1000000; cursor++) {
+			Move const& move = *cursor;
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
-			int currentEval = (recursiveSearch(resultingPosition, depth - 1).first * -1) - 1;
-			bestResult = std::pair(currentEval, move);
+			if (!isIllegalDueToCheck(resultingPosition)) {
+				int currentEval = (recursiveSearch(resultingPosition, depth - 1).first * -1);
+				bestResult = std::pair(currentEval, move);
+			}
 		}
 
-		for (auto const& move : std::span(possibleMoves.begin() + 1, possibleMoves.end())) {
+		for (; cursor != possibleMoves.end(); cursor++) {
+			Move const& move = *cursor;
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
 			int currentEval = recursiveSearch(resultingPosition, depth - 1).first * -1;
-			if (currentEval > bestResult.first) {
+			if (currentEval > bestResult.first && !isIllegalDueToCheck(resultingPosition)) {
 				bestResult = std::pair(currentEval, move);
 			}
 		}
