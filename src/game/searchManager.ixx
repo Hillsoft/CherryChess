@@ -12,9 +12,10 @@ import cherry.uci.cmd.info;
 
 export namespace cherry {
 
-	std::pair<Evaluation, Move> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int depth) {
+	std::tuple<Evaluation, Move, int> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int depth) {
+		int nodes = 1;
 		if (depth <= 0) {
-			return std::pair(evaluatePosition(rootPosition), Move());
+			return std::tuple(evaluatePosition(rootPosition), Move(), nodes);
 		}
 
 		std::vector<Move> possibleMoves = availableMoves(rootPosition);
@@ -25,7 +26,8 @@ export namespace cherry {
 		for (auto const& move : possibleMoves) {
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
-			Evaluation currentEval = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), depth - 1).first;
+			auto [currentEval, _, nodesInc] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), depth - 1);
+			nodes += nodesInc;
 			currentEval.step();
 
 			if (currentEval > beta && !isIllegalDueToCheck(resultingPosition)) {
@@ -44,10 +46,10 @@ export namespace cherry {
 		}
 
 		if (!hasLegalMove) {
-			return std::pair(terminalEval(rootPosition), Move());
+			return std::tuple(terminalEval(rootPosition), Move(), nodes);
 		}
 
-		return bestResult;
+		return std::tuple(bestResult.first, bestResult.second, nodes);
 	}
 
 	class SearchManager {
@@ -60,9 +62,9 @@ export namespace cherry {
 		}
 
 		Move stopSearch(uci::CommandEmitter* emitter) {
-			auto [eval, move] = recursiveSearch(currentPosition_, worstEval, bestEval, 6);
+			auto [eval, move, nodes] = recursiveSearch(currentPosition_, worstEval, bestEval, 6);
 			if (emitter != nullptr) {
-				emitter->emitCommand(uci::command::UCIInfo(eval));
+				emitter->emitCommand(uci::command::UCIInfo(nodes, eval));
 			}
 			return move;
 		}
