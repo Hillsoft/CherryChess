@@ -26,21 +26,23 @@ export namespace cherry {
 		for (auto const& move : possibleMoves) {
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
-			auto [currentEval, _, nodesInc] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), depth - 1);
-			nodes += nodesInc;
-			currentEval.step();
+			if (!isIllegalDueToCheck(resultingPosition)) {
+				auto [currentEval, _, nodesInc] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), depth - 1);
+				nodes += nodesInc;
+				currentEval.step();
 
-			if (currentEval > beta && !isIllegalDueToCheck(resultingPosition)) {
-				hasLegalMove = true;
-				bestResult = std::pair(currentEval, move);
-				break;
-			}
+				if (currentEval > beta) {
+					hasLegalMove = true;
+					bestResult = std::pair(currentEval, move);
+					break;
+				}
 
-			if (currentEval > bestResult.first && !isIllegalDueToCheck(resultingPosition)) {
-				hasLegalMove = true;
-				bestResult = std::pair(currentEval, move);
-				if (currentEval > alpha) {
-					alpha = currentEval;
+				if (currentEval > bestResult.first) {
+					hasLegalMove = true;
+					bestResult = std::pair(currentEval, move);
+					if (currentEval > alpha) {
+						alpha = currentEval;
+					}
 				}
 			}
 		}
@@ -62,7 +64,7 @@ export namespace cherry {
 		}
 
 		Move stopSearch(uci::CommandEmitter* emitter) {
-			auto [eval, move, nodes] = recursiveSearch(currentPosition_, worstEval, bestEval, 6);
+			auto [eval, move, nodes] = recursiveSearch(currentPosition_, worstEval, bestEval, 4);
 			if (emitter != nullptr) {
 				emitter->emitCommand(uci::command::UCIInfo(nodes, eval));
 			}
