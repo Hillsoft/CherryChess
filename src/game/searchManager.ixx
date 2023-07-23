@@ -5,6 +5,7 @@ import std;
 import cherry.board;
 import cherry.move;
 import cherry.moveEnumeration;
+import cherry.positionEval;
 
 export namespace cherry {
 
@@ -19,7 +20,18 @@ export namespace cherry {
 
 		Move stopSearch() {
 			std::vector<Move> possibleMoves = availableMoves(currentPosition_);
-			return possibleMoves[std::rand() % possibleMoves.size()];
+			Move bestMove;
+			int bestEval = -1000000;
+			for (auto const& move : possibleMoves) {
+				Board resultingPosition = currentPosition_;
+				resultingPosition.makeMove(move);
+				int curEval = evaluatePosition(resultingPosition) * (currentPosition_.whiteToPlay_ ? 1 : -1);
+				if (curEval > bestEval) {
+					bestEval = curEval;
+					bestMove = move;
+				}
+			}
+			return bestMove;
 		}
 
 	private:

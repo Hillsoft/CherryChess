@@ -322,10 +322,8 @@ export namespace cherry {
 			return result;
 		}
 
-	private:
 		std::array<Piece, 64> data_;
 
-	public:
 		bool whiteToPlay_ = true;
 		bool whiteKingsideCastle_ = false;
 		bool whiteQueensideCastle_ = false;

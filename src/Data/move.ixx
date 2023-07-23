@@ -11,6 +11,9 @@ export namespace cherry {
 	
 	class Move {
 	public:
+		constexpr Move()
+			: from_(nullSquareIndex), to_(nullSquareIndex), promotion_(PieceType::TypeNone) {}
+
 		constexpr Move(SquareIndex from, SquareIndex to, PieceType promotion = PieceType::TypeNone)
 			: from_(from), to_(to), promotion_(promotion) {}
 
@@ -20,6 +23,9 @@ export namespace cherry {
 		}
 
 		std::string getCode() const {
+			if (from_ == nullSquareIndex || to_ == nullSquareIndex) {
+				return "0000";
+			}
 			return std::format("{}{}{}", from_.getCode(), to_.getCode(), getPieceCode(promotion_));
 		}
 
