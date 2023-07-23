@@ -3,6 +3,7 @@ export module cherry.searchManager;
 import std;
 
 import cherry.board;
+import cherry.evaluation;
 import cherry.move;
 import cherry.moveEnumeration;
 import cherry.positionEval;
@@ -11,34 +12,39 @@ import cherry.uci.cmd.info;
 
 export namespace cherry {
 
-	std::pair<int, Move> recursiveSearch(Board const& rootPosition, int depth) {
+	std::pair<Evaluation , Move > recursiveSearch(Board const& rootPosition, int depth) {
 		if (depth <= 0) {
-			return std::pair(evaluatePosition(rootPosition) * (rootPosition.whiteToPlay_ ? 1 : -1), Move());
+			return std::pair(evaluatePosition(rootPosition), Move());
 		}
 
 		std::vector<Move> possibleMoves = availableMoves(rootPosition);
-		if (possibleMoves.size() == 0) {
-			return std::pair(-1000000, Move());
-		}
 
-		std::pair<int, Move> bestResult(-1000000, Move());
+		std::pair<Evaluation, Move> bestResult(Evaluation(Evaluation::CPTag(), 0), Move());
+		bool hasLegalMove = false;
 
 		auto cursor = possibleMoves.begin();
-		for (; cursor != possibleMoves.end() && bestResult.first == -1000000; cursor++) {
+		for (; cursor != possibleMoves.end() && !hasLegalMove; cursor++) {
 			Move const& move = *cursor;
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
 			if (!isIllegalDueToCheck(resultingPosition)) {
-				int currentEval = (recursiveSearch(resultingPosition, depth - 1).first * -1);
+				Evaluation currentEval = recursiveSearch(resultingPosition, depth - 1).first;
+				currentEval.step();
 				bestResult = std::pair(currentEval, move);
+				hasLegalMove = true;
 			}
+		}
+
+		if (!hasLegalMove) {
+			return std::pair(terminalEval(rootPosition), Move());
 		}
 
 		for (; cursor != possibleMoves.end(); cursor++) {
 			Move const& move = *cursor;
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
-			int currentEval = recursiveSearch(resultingPosition, depth - 1).first * -1;
+			Evaluation currentEval = recursiveSearch(resultingPosition, depth - 1).first;
+			currentEval.step();
 			if (currentEval > bestResult.first && !isIllegalDueToCheck(resultingPosition)) {
 				bestResult = std::pair(currentEval, move);
 			}
