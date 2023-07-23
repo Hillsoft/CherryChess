@@ -102,13 +102,17 @@ namespace cherry {
 						}
 					}
 
-					nextSquare = SquareIndex(i + step - 1);
-					if (currentSquare.getFile() != 0 && (board.enPassantTarget_ == nextSquare || getPieceColor(board.at(nextSquare)) == opponent)) {
-						maybeWithPromotion(currentSquare, nextSquare);
+					if (currentSquare.getFile() != 0) {
+						nextSquare = SquareIndex(i + step - 1);
+						if (board.enPassantTarget_ == nextSquare || getPieceColor(board.at(nextSquare)) == opponent) {
+							maybeWithPromotion(currentSquare, nextSquare);
+						}
 					}
-					nextSquare = SquareIndex(i + step + 1);
-					if (currentSquare.getFile() != 7 && (board.enPassantTarget_ == nextSquare || getPieceColor(board.at(nextSquare)) == opponent)) {
-						maybeWithPromotion(currentSquare, nextSquare);
+					if (currentSquare.getFile() != 7) {
+						nextSquare = SquareIndex(i + step + 1);
+						if (board.enPassantTarget_ == nextSquare || getPieceColor(board.at(nextSquare)) == opponent) {
+							maybeWithPromotion(currentSquare, nextSquare);
+						}
 					}
 					break;
 				}
