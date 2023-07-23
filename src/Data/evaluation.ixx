@@ -46,10 +46,35 @@ export namespace cherry {
 			}
 		}
 
+		void unstep() {
+			if (isMate_) {
+				if (myMate_) {
+					value_--;
+				}
+				myMate_ = !myMate_;
+			}
+			else {
+				value_ = -value_;
+			}
+		}
+
 		bool isMate_;
 		bool myMate_;
 		short value_;
 	};
+
+	Evaluation step(Evaluation eval) {
+		eval.step();
+		return eval;
+	}
+
+	Evaluation unstep(Evaluation eval) {
+		eval.unstep();
+		return eval;
+	}
+
+	constexpr Evaluation worstEval(Evaluation::MateTag(), false, -1000);
+	constexpr Evaluation bestEval(Evaluation::MateTag(), true, -1000);
 
 	std::ostream& operator<<(std::ostream& os, Evaluation const& eval) {
 		if (eval.isMate_) {

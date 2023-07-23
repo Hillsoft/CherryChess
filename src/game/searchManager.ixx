@@ -12,42 +12,39 @@ import cherry.uci.cmd.info;
 
 export namespace cherry {
 
-	std::pair<Evaluation , Move > recursiveSearch(Board const& rootPosition, int depth) {
+	std::pair<Evaluation, Move> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int depth) {
 		if (depth <= 0) {
 			return std::pair(evaluatePosition(rootPosition), Move());
 		}
 
 		std::vector<Move> possibleMoves = availableMoves(rootPosition);
 
-		std::pair<Evaluation, Move> bestResult(Evaluation(Evaluation::CPTag(), 0), Move());
+		std::pair<Evaluation, Move> bestResult(worstEval, Move());
 		bool hasLegalMove = false;
 
-		auto cursor = possibleMoves.begin();
-		for (; cursor != possibleMoves.end() && !hasLegalMove; cursor++) {
-			Move const& move = *cursor;
+		for (auto const& move : possibleMoves) {
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
-			if (!isIllegalDueToCheck(resultingPosition)) {
-				Evaluation currentEval = recursiveSearch(resultingPosition, depth - 1).first;
-				currentEval.step();
-				bestResult = std::pair(currentEval, move);
+			Evaluation currentEval = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), depth - 1).first;
+			currentEval.step();
+
+			if (currentEval > beta && !isIllegalDueToCheck(resultingPosition)) {
 				hasLegalMove = true;
+				bestResult = std::pair(currentEval, move);
+				break;
+			}
+
+			if (currentEval > bestResult.first && !isIllegalDueToCheck(resultingPosition)) {
+				hasLegalMove = true;
+				bestResult = std::pair(currentEval, move);
+				if (currentEval > alpha) {
+					alpha = currentEval;
+				}
 			}
 		}
 
 		if (!hasLegalMove) {
 			return std::pair(terminalEval(rootPosition), Move());
-		}
-
-		for (; cursor != possibleMoves.end(); cursor++) {
-			Move const& move = *cursor;
-			Board resultingPosition = rootPosition;
-			resultingPosition.makeMove(move);
-			Evaluation currentEval = recursiveSearch(resultingPosition, depth - 1).first;
-			currentEval.step();
-			if (currentEval > bestResult.first && !isIllegalDueToCheck(resultingPosition)) {
-				bestResult = std::pair(currentEval, move);
-			}
 		}
 
 		return bestResult;
@@ -63,7 +60,7 @@ export namespace cherry {
 		}
 
 		Move stopSearch(uci::CommandEmitter* emitter) {
-			auto [eval, move] = recursiveSearch(currentPosition_, 6);
+			auto [eval, move] = recursiveSearch(currentPosition_, worstEval, bestEval, 6);
 			if (emitter != nullptr) {
 				emitter->emitCommand(uci::command::UCIInfo(eval));
 			}
