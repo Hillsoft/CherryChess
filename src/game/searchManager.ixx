@@ -6,6 +6,8 @@ import cherry.board;
 import cherry.move;
 import cherry.moveEnumeration;
 import cherry.positionEval;
+import cherry.uci.commandEmitter;
+import cherry.uci.cmd.info;
 
 export namespace cherry {
 
@@ -38,8 +40,12 @@ export namespace cherry {
 			currentPosition_ = std::move(position);
 		}
 
-		Move stopSearch() {
-			return recursiveSearch(currentPosition_, 5).second;
+		Move stopSearch(uci::CommandEmitter* emitter) {
+			auto [eval, move] = recursiveSearch(currentPosition_, 5);
+			if (emitter != nullptr) {
+				emitter->emitCommand(uci::command::UCIInfo(eval));
+			}
+			return move;
 		}
 
 	private:

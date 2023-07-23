@@ -15,7 +15,7 @@ export namespace cherry::uci::command {
 	};
 
 	void handleCommand(CommandEmitter& emitter, Go const& /* command */) {
-		Move bestMove = getGlobalSearchManager().stopSearch();
+		Move bestMove = getGlobalSearchManager().stopSearch(&emitter);
 		emitter.emitCommand(BestMove(bestMove));
 	}
 
