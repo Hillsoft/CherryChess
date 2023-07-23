@@ -17,9 +17,20 @@ export namespace cherry {
 		}
 
 		std::vector<Move> possibleMoves = availableMoves(rootPosition);
-		std::pair<int, Move> bestResult(-100000, Move());
+		if (possibleMoves.size() == 0) {
+			return std::pair(-1000000, Move());
+		}
 
-		for (auto const& move : possibleMoves) {
+		std::pair<int, Move> bestResult(-1000000, Move());
+		{
+			Move move = possibleMoves[0];
+			Board resultingPosition = rootPosition;
+			resultingPosition.makeMove(move);
+			int currentEval = (recursiveSearch(resultingPosition, depth - 1).first * -1) - 1;
+			bestResult = std::pair(currentEval, move);
+		}
+
+		for (auto const& move : std::span(possibleMoves.begin() + 1, possibleMoves.end())) {
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
 			int currentEval = recursiveSearch(resultingPosition, depth - 1).first * -1;
@@ -41,7 +52,7 @@ export namespace cherry {
 		}
 
 		Move stopSearch(uci::CommandEmitter* emitter) {
-			auto [eval, move] = recursiveSearch(currentPosition_, 5);
+			auto [eval, move] = recursiveSearch(currentPosition_, 6);
 			if (emitter != nullptr) {
 				emitter->emitCommand(uci::command::UCIInfo(eval));
 			}
