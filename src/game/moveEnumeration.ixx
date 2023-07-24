@@ -16,11 +16,66 @@ namespace cherry {
 		constexpr std::array<std::pair<char, char>, 4> diagonal = { std::pair(1, 1), std::pair(1, -1), std::pair(-1, 1), std::pair(-1, -1) };
 		constexpr std::array<std::pair<char, char>, 8> knight = { std::pair(1, 2), std::pair(2, 1), std::pair(2, -1), std::pair(1, -2), std::pair(-1, -2), std::pair(-2, -1), std::pair(-2, 1), std::pair(-1, 2) };
 		constexpr std::array<PieceType, 4> promotionTypes = { PieceType::Rook, PieceType::Knight, PieceType::Bishop, PieceType::Queen };
+
+		bool isSquareAttacked(Board const& board, SquareIndex targetSquare, PieceColor attackingColor) {
+			assert(attackingColor != PieceColor::ColorNone);
+
+			char pawnAttackDirection = attackingColor == PieceColor::White ? 1 : -1;
+			auto scan = [&](SquareIndex root, std::pair<char, char> step, char maxDist = 8) {
+				auto& xStep = step.first;
+				auto& yStep = step.second;
+				SquareIndex current = root;
+				char rawOffset = xStep + 8 * yStep;
+				char dist = 0;
+				while (!(dist >= maxDist
+					|| (xStep + current.getFile() < 0)
+					|| (xStep + current.getFile() > 7)
+					|| (current.getRank() - yStep < 0)
+					|| (current.getRank() - yStep > 7))) {
+					current = SquareIndex(current.getRawIndex() + rawOffset);
+					dist++;
+					if (board.at(current) != Piece::PieceNone) {
+						return std::pair(board.at(current), dist);
+					}
+				}
+				return std::pair(Piece::PieceNone, (char)0);
+			};
+
+			// Diagonal attackers
+			for (auto const& dir : diagonal) {
+				auto [attacker, dist] = scan(targetSquare, dir);
+				if (getPieceColor(attacker) == attackingColor &&
+					(getPieceType(attacker) == PieceType::Bishop || getPieceType(attacker) == PieceType::Queen
+						|| (getPieceType(attacker) == PieceType::King && dist == 1)
+						|| (getPieceType(attacker) == PieceType::Pawn && dist == 1 && dir.second == pawnAttackDirection))) {
+					return true;
+				}
+			}
+			// Straight attackers
+			for (auto const& dir : straight) {
+				auto [attacker, dist] = scan(targetSquare, dir);
+				if (getPieceColor(attacker) == attackingColor &&
+					(getPieceType(attacker) == PieceType::Rook || getPieceType(attacker) == PieceType::Queen
+						|| (getPieceType(attacker) == PieceType::King && dist == 1))) {
+					return true;
+				}
+			}
+			// Knights
+			for (auto const& dir : knight) {
+				auto [attacker, dist] = scan(targetSquare, dir, 1);
+				if (getPieceColor(attacker) == attackingColor &&
+					(getPieceType(attacker) == PieceType::Knight)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
 	} // namespace
 
 	export bool isIllegalDueToCheck(Board const& board);
 
-	/* constexpr */ std::vector<Move> availableMovesRaw(Board const& board, PieceColor toPlay, std::vector<SquareIndex> const& opponentTargets, bool enforceNoCheck = true) {
+	/* constexpr */ std::vector<Move> availableMovesRaw(Board const& board, PieceColor toPlay) {
 		assert(toPlay == PieceColor::White || toPlay == PieceColor::Black);
 
 		std::vector<Move> result;
@@ -28,14 +83,9 @@ namespace cherry {
 		PieceColor opponent = toPlay == PieceColor::White ? PieceColor::Black : PieceColor::White;
 
 		auto addResult = [&](Move move) {
-			if (enforceNoCheck) {
-				Board newBoard = board;
-				newBoard.makeMove(move);
-				if (!isIllegalDueToCheck(newBoard)) {
-					result.push_back(move);
-				}
-			}
-			else {
+			Board newBoard = board;
+			newBoard.makeMove(move);
+			if (!isIllegalDueToCheck(newBoard)) {
 				result.push_back(move);
 			}
 		};
@@ -136,31 +186,20 @@ namespace cherry {
 		}
 
 		// Castling
+		// No need to test resting position for check as that will be done later
 		if (toPlay == PieceColor::White) {
 			if (board.whiteKingsideCastle_) {
 				if (board.at(SquareIndex("f1")) == Piece::PieceNone && board.at(SquareIndex("g1")) == Piece::PieceNone) {
-					bool castleBlocked = false;
-					for (auto const& t : opponentTargets) {
-						if (t == SquareIndex("e1") || t == SquareIndex("f1") || t == SquareIndex("g1")) {
-							castleBlocked = true;
-							break;
-						}
-					}
-					if (!castleBlocked) {
+					if (!isSquareAttacked(board, SquareIndex("e1"), PieceColor::Black)
+						&& !isSquareAttacked(board, SquareIndex("f1"), PieceColor::Black)) {
 						addResult(Move("e1g1"));
 					}
 				}
 			}
 			if (board.whiteQueensideCastle_) {
 				if (board.at(SquareIndex("b1")) == Piece::PieceNone && board.at(SquareIndex("c1")) == Piece::PieceNone && board.at(SquareIndex("d1")) == Piece::PieceNone) {
-					bool castleBlocked = false;
-					for (auto const& t : opponentTargets) {
-						if (t == SquareIndex("e1") || t == SquareIndex("d1") || t == SquareIndex("c1")) {
-							castleBlocked = true;
-							break;
-						}
-					}
-					if (!castleBlocked) {
+					if (!isSquareAttacked(board, SquareIndex("e1"), PieceColor::Black)
+						&& !isSquareAttacked(board, SquareIndex("d1"), PieceColor::Black)) {
 						addResult(Move("e1c1"));
 					}
 				}
@@ -169,28 +208,16 @@ namespace cherry {
 		if (toPlay == PieceColor::Black) {
 			if (board.blackKingsideCastle_) {
 				if (board.at(SquareIndex("f8")) == Piece::PieceNone && board.at(SquareIndex("g8")) == Piece::PieceNone) {
-					bool castleBlocked = false;
-					for (auto const& t : opponentTargets) {
-						if (t == SquareIndex("e8") || t == SquareIndex("f8") || t == SquareIndex("g8")) {
-							castleBlocked = true;
-							break;
-						}
-					}
-					if (!castleBlocked) {
+					if (!isSquareAttacked(board, SquareIndex("e8"), PieceColor::White)
+						&& !isSquareAttacked(board, SquareIndex("f8"), PieceColor::White)) {
 						addResult(Move("e8g8"));
 					}
 				}
 			}
 			if (board.blackQueensideCastle_) {
 				if (board.at(SquareIndex("b8")) == Piece::PieceNone && board.at(SquareIndex("c8")) == Piece::PieceNone && board.at(SquareIndex("d8")) == Piece::PieceNone) {
-					bool castleBlocked = false;
-					for (auto const& t : opponentTargets) {
-						if (t == SquareIndex("e8") || t == SquareIndex("d8") || t == SquareIndex("c8")) {
-							castleBlocked = true;
-							break;
-						}
-					}
-					if (!castleBlocked) {
+					if (!isSquareAttacked(board, SquareIndex("e8"), PieceColor::White)
+						&& !isSquareAttacked(board, SquareIndex("d8"), PieceColor::White)) {
 						addResult(Move("e8c8"));
 					}
 				}
@@ -201,68 +228,7 @@ namespace cherry {
 	}
 
 	export /* constexpr */ std::vector<Move> availableMoves(Board const& board) {
-		std::vector<Move> opponentMoves = availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::Black : PieceColor::White, {}, false);
-		std::vector<SquareIndex> opponentTargets;
-		for (auto const& move : opponentMoves) {
-			opponentTargets.push_back(move.to_);
-		}
-
-		return availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black, opponentTargets);
-	}
-
-	bool isSquareAttacked(Board const& board, SquareIndex targetSquare, PieceColor attackingColor) {
-		assert(attackingColor != PieceColor::ColorNone);
-
-		char pawnAttackDirection = attackingColor == PieceColor::White ? 1 : -1;
-		auto scan = [&](SquareIndex root, std::pair<char, char> step, char maxDist = 8) {
-			auto& xStep = step.first;
-			auto& yStep = step.second;
-			SquareIndex current = root;
-			char rawOffset = xStep + 8 * yStep;
-			char dist = 0;
-			while (!(dist >= maxDist
-				|| (xStep + current.getFile() < 0)
-				|| (xStep + current.getFile() > 7)
-				|| (current.getRank() - yStep < 0)
-				|| (current.getRank() - yStep > 7))) {
-				current = SquareIndex(current.getRawIndex() + rawOffset);
-				dist++;
-				if (board.at(current) != Piece::PieceNone) {
-					return std::pair(board.at(current), dist);
-				}
-			}
-			return std::pair(Piece::PieceNone, (char)0);
-		};
-
-		// Diagonal attackers
-		for (auto const& dir : diagonal) {
-			auto [attacker, dist] = scan(targetSquare, dir);
-			if (getPieceColor(attacker) == attackingColor &&
-				(getPieceType(attacker) == PieceType::Bishop || getPieceType(attacker) == PieceType::Queen
-					|| (getPieceType(attacker) == PieceType::King && dist == 1)
-					|| (getPieceType(attacker) == PieceType::Pawn && dist == 1 && dir.second == pawnAttackDirection))) {
-				return true;
-			}
-		}
-		// Straight attackers
-		for (auto const& dir : straight) {
-			auto [attacker, dist] = scan(targetSquare, dir);
-			if (getPieceColor(attacker) == attackingColor &&
-				(getPieceType(attacker) == PieceType::Rook || getPieceType(attacker) == PieceType::Queen
-					|| (getPieceType(attacker) == PieceType::King && dist == 1))) {
-				return true;
-			}
-		}
-		// Knights
-		for (auto const& dir : knight) {
-			auto [attacker, dist] = scan(targetSquare, dir, 1);
-			if (getPieceColor(attacker) == attackingColor &&
-				(getPieceType(attacker) == PieceType::Knight)) {
-				return true;
-			}
-		}
-
-		return false;
+		return availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black);
 	}
 
 	export bool isIllegalDueToCheck(Board const& board) {
