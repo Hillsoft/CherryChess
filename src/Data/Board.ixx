@@ -29,6 +29,12 @@ export namespace cherry {
 				if (i >= 64 || i / 8 != row)
 					throw std::runtime_error("Invalid FEN");
 				data_[i] = current;
+				if (current == Piece::WhiteKing) {
+					whiteKing_ = SquareIndex(i);
+				}
+				if (current == Piece::BlackKing) {
+					blackKing_ = SquareIndex(i);
+				}
 				i++;
 			};
 
@@ -179,6 +185,9 @@ export namespace cherry {
 		constexpr auto operator<=>(Board const& other) const = default;
 
 		constexpr Piece at(SquareIndex i) const {
+			if (i == nullSquareIndex) {
+				throw std::exception("Looking up nullSquareIndex");
+			}
 			return data_[i.getRawIndex()];
 		}
 
@@ -251,6 +260,14 @@ export namespace cherry {
 			// Promotion
 			if (m.promotion_ != PieceType::TypeNone) {
 				data_[m.to_.getRawIndex()] = makePiece(getPieceColor(data_[m.to_.getRawIndex()]), m.promotion_);
+			}
+
+			// King positions
+			if (data_[m.to_.getRawIndex()] == Piece::WhiteKing) {
+				whiteKing_ = m.to_;
+			}
+			if (data_[m.to_.getRawIndex()] == Piece::BlackKing) {
+				blackKing_ = m.to_;
 			}
 
 			whiteToPlay_ = !whiteToPlay_;
@@ -331,6 +348,10 @@ export namespace cherry {
 		bool blackQueensideCastle_ = false;
 		SquareIndex enPassantTarget_ = nullSquareIndex;
 		short halfMoveClock_ = 0;
+
+		// To optimise check testing
+		SquareIndex whiteKing_ = SquareIndex(nullSquareIndex);
+		SquareIndex blackKing_ = SquareIndex(nullSquareIndex);
 	};
 
 	constexpr Board startingPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
