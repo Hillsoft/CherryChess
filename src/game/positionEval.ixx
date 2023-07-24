@@ -15,6 +15,22 @@ export namespace cherry {
 		for (auto const& piece : position.data_) {
 			runningTotal += colorValues[(size_t)getPieceColor(piece)] * pieceValues[(size_t)getPieceType(piece)];
 		}
+		runningTotal += 2 * colorValues[(size_t)getPieceColor(position.at(SquareIndex("d4")))];
+		runningTotal += 2 * colorValues[(size_t)getPieceColor(position.at(SquareIndex("e4")))];
+		runningTotal += 2 * colorValues[(size_t)getPieceColor(position.at(SquareIndex("d5")))];
+		runningTotal += 2 * colorValues[(size_t)getPieceColor(position.at(SquareIndex("e5")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("c3")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("c4")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("c5")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("c6")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("f3")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("f4")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("f5")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("f6")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("d6")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("e6")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("d3")))];
+		runningTotal += colorValues[(size_t)getPieceColor(position.at(SquareIndex("e3")))];
 		return Evaluation(Evaluation::CPTag(), runningTotal * (position.whiteToPlay_ ? 1 : -1));
 	 }
 
