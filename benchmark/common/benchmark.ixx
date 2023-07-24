@@ -13,7 +13,7 @@ export namespace cherry::benchmark {
 		do {
 			f();
 			iterations++;
-		} while ((end = std::chrono::steady_clock::now()) - start < std::chrono::seconds(1));
+		} while ((end = std::chrono::steady_clock::now()) - start < std::chrono::seconds(10));
 		const auto elapsed = end - start;
 		std::cout << "Time elapsed: " << elapsed << std::endl;
 		std::cout << "Iterations: " << iterations << std::endl;
