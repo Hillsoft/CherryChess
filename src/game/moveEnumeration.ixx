@@ -210,7 +210,10 @@ namespace cherry {
 		return availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black, opponentTargets);
 	}
 
-	export bool isIllegalDueToCheck(Board const& board) {
+	bool isSquareAttacked(Board const& board, SquareIndex targetSquare, PieceColor attackingColor) {
+		assert(attackingColor != PieceColor::ColorNone);
+
+		char pawnAttackDirection = attackingColor == PieceColor::White ? 1 : -1;
 		auto scan = [&](SquareIndex root, std::pair<char, char> step, char maxDist = 8) {
 			auto& xStep = step.first;
 			auto& yStep = step.second;
@@ -231,13 +234,9 @@ namespace cherry {
 			return std::pair(Piece::PieceNone, (char)0);
 		};
 
-		SquareIndex kingPosition = board.whiteToPlay_ ? board.blackKing_ : board.whiteKing_;
-		PieceColor attackingColor = board.whiteToPlay_ ? PieceColor::White : PieceColor::Black;
-		char pawnAttackDirection = board.whiteToPlay_ ? 1 : -1;
-
 		// Diagonal attackers
 		for (auto const& dir : diagonal) {
-			auto [ attacker, dist ] = scan(kingPosition, dir);
+			auto [attacker, dist] = scan(targetSquare, dir);
 			if (getPieceColor(attacker) == attackingColor &&
 				(getPieceType(attacker) == PieceType::Bishop || getPieceType(attacker) == PieceType::Queen
 					|| (getPieceType(attacker) == PieceType::King && dist == 1)
@@ -245,22 +244,33 @@ namespace cherry {
 				return true;
 			}
 		}
+		// Straight attackers
 		for (auto const& dir : straight) {
-			auto [attacker, dist] = scan(kingPosition, dir);
+			auto [attacker, dist] = scan(targetSquare, dir);
 			if (getPieceColor(attacker) == attackingColor &&
 				(getPieceType(attacker) == PieceType::Rook || getPieceType(attacker) == PieceType::Queen
 					|| (getPieceType(attacker) == PieceType::King && dist == 1))) {
 				return true;
 			}
-		}for (auto const& dir : knight) {
-			auto [attacker, dist] = scan(kingPosition, dir, 1);
+		}
+		// Knights
+		for (auto const& dir : knight) {
+			auto [attacker, dist] = scan(targetSquare, dir, 1);
 			if (getPieceColor(attacker) == attackingColor &&
 				(getPieceType(attacker) == PieceType::Knight)) {
 				return true;
 			}
 		}
-		
+
 		return false;
+	}
+
+	export bool isIllegalDueToCheck(Board const& board) {
+		return
+			isSquareAttacked(
+				board,
+				board.whiteToPlay_ ? board.blackKing_ : board.whiteKing_,
+				board.whiteToPlay_ ? PieceColor::White : PieceColor::Black);
 	}
 
 } // namespace
