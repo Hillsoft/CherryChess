@@ -180,7 +180,6 @@ cherry::test::Test moveBlackPawn("MoveBlackPawn", [](cherry::test::TestRunner& r
 		cherry::Move("g6h7"),
 		cherry::Move("g6f6"),
 		cherry::Move("g6h6"),
-		cherry::Move("g6g5"),
 		// Pawn moves
 		cherry::Move("h5h4"),
 	};
@@ -216,17 +215,13 @@ cherry::test::Test moveWhitePawnStart("MoveWhitePawnStart", [](cherry::test::Tes
 	});
 
 cherry::test::Test moveWhitePawnCaptures("MoveWhitePawnCaptures", [](cherry::test::TestRunner& runner) {
-	cherry::Board const board("8/8/6k1/pp4pp/PPK3PP/8/8/8 w - - 0 1");
+	cherry::Board const board("8/8/6k1/pp4pp/PP4PP/K7/8/8 w - - 0 1");
 	auto moves = cherry::availableMoves(board);
 	std::vector<cherry::Move> expectedMoves = {
 		// King moves
-		cherry::Move("c4b5"),
-		cherry::Move("c4c5"),
-		cherry::Move("c4d5"),
-		cherry::Move("c4d4"),
-		cherry::Move("c4b3"),
-		cherry::Move("c4c3"),
-		cherry::Move("c4d3"),
+		cherry::Move("a3b3"),
+		cherry::Move("a3a2"),
+		cherry::Move("a3b2"),
 		// Pawn moves
 		cherry::Move("a4b5"),
 		cherry::Move("b4a5"),

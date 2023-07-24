@@ -26,23 +26,21 @@ export namespace cherry {
 		for (auto const& move : possibleMoves) {
 			Board resultingPosition = rootPosition;
 			resultingPosition.makeMove(move);
-			if (!isIllegalDueToCheck(resultingPosition)) {
-				auto [currentEval, _, nodesInc] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), depth - 1);
-				nodes += nodesInc;
-				currentEval.step();
+			auto [currentEval, _, nodesInc] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), depth - 1);
+			nodes += nodesInc;
+			currentEval.step();
 
-				if (currentEval > beta) {
-					hasLegalMove = true;
-					bestResult = std::pair(currentEval, move);
-					break;
-				}
+			if (currentEval > beta) {
+				hasLegalMove = true;
+				bestResult = std::pair(currentEval, move);
+				break;
+			}
 
-				if (currentEval > bestResult.first) {
-					hasLegalMove = true;
-					bestResult = std::pair(currentEval, move);
-					if (currentEval > alpha) {
-						alpha = currentEval;
-					}
+			if (currentEval > bestResult.first) {
+				hasLegalMove = true;
+				bestResult = std::pair(currentEval, move);
+				if (currentEval > alpha) {
+					alpha = currentEval;
 				}
 			}
 		}

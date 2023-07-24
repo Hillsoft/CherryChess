@@ -11,7 +11,9 @@ import cherry.squareIndex;
 
 namespace cherry {
 
-	/* constexpr */ std::vector<Move> availableMovesRaw(Board const& board, PieceColor toPlay, std::vector<SquareIndex> const& opponentTargets) {
+	export bool isIllegalDueToCheck(Board const& board);
+
+	/* constexpr */ std::vector<Move> availableMovesRaw(Board const& board, PieceColor toPlay, std::vector<SquareIndex> const& opponentTargets, bool enforceNoCheck = true) {
 		assert(toPlay == PieceColor::White || toPlay == PieceColor::Black);
 
 		constexpr std::array<std::pair<char, char>, 4> straight = { std::pair(1, 0), std::pair(-1, 0), std::pair(0, 1), std::pair(0, -1) };
@@ -23,6 +25,18 @@ namespace cherry {
 
 		PieceColor opponent = toPlay == PieceColor::White ? PieceColor::Black : PieceColor::White;
 
+		auto addResult = [&](Move move) {
+			if (enforceNoCheck) {
+				Board newBoard = board;
+				newBoard.makeMove(move);
+				if (!isIllegalDueToCheck(newBoard)) {
+					result.push_back(move);
+				}
+			}
+			else {
+				result.push_back(move);
+			}
+		};
 		auto scan = [&](SquareIndex root, std::pair<char, char> step, size_t maxDist = 8) {
 			auto& xStep = step.first;
 			auto& yStep = step.second;
@@ -35,7 +49,7 @@ namespace cherry {
 				|| (current.getRank() - yStep > 7))) {
 				current = SquareIndex(current.getRawIndex() + rawOffset);
 				if (getPieceColor(board.at(current)) != toPlay) {
-					result.push_back(Move(root, current));
+					addResult(Move(root, current));
 				}
 				if (board.at(current) != Piece::PieceNone) {
 					return;
@@ -46,11 +60,11 @@ namespace cherry {
 		auto maybeWithPromotion = [&](SquareIndex root, SquareIndex target) {
 			if (target.getRank() == 0 || target.getRank() == 7) {
 				for (auto const& type : promotionTypes) {
-					result.push_back(Move(root, target, type));
+					addResult(Move(root, target, type));
 				}
 			}
 			else {
-				result.push_back(Move(root, target));
+				addResult(Move(root, target));
 			}
 		};
 
@@ -98,7 +112,7 @@ namespace cherry {
 						maybeWithPromotion(currentSquare, nextSquare);
 						// Double movement, promotion is not possible here
 						if (((nextRank == 2 && step > 0) || (nextRank == 5 && step < 0)) && board.at(SquareIndex(i + 2 * step)) == Piece::PieceNone) {
-							result.push_back(Move(currentSquare, SquareIndex(i + 2 * step)));
+							addResult(Move(currentSquare, SquareIndex(i + 2 * step)));
 						}
 					}
 
@@ -131,7 +145,7 @@ namespace cherry {
 						}
 					}
 					if (!castleBlocked) {
-						result.push_back(Move("e1g1"));
+						addResult(Move("e1g1"));
 					}
 				}
 			}
@@ -145,7 +159,7 @@ namespace cherry {
 						}
 					}
 					if (!castleBlocked) {
-						result.push_back(Move("e1c1"));
+						addResult(Move("e1c1"));
 					}
 				}
 			}
@@ -161,7 +175,7 @@ namespace cherry {
 						}
 					}
 					if (!castleBlocked) {
-						result.push_back(Move("e8g8"));
+						addResult(Move("e8g8"));
 					}
 				}
 			}
@@ -175,7 +189,7 @@ namespace cherry {
 						}
 					}
 					if (!castleBlocked) {
-						result.push_back(Move("e8c8"));
+						addResult(Move("e8c8"));
 					}
 				}
 			}
@@ -195,7 +209,7 @@ namespace cherry {
 	}
 
 	export bool isIllegalDueToCheck(Board const& board) {
-		std::vector<Move> currentMoves = availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black, {});
+		std::vector<Move> currentMoves = availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black, {}, false);
 		for (auto const& move : currentMoves) {
 			if (getPieceType(board.at(move.to_)) == PieceType::King) {
 				return true;
