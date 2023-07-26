@@ -73,21 +73,46 @@ namespace cherry {
 		}
 	} // namespace
 
+	export struct MoveEnumerationResult {
+	public:
+		std::vector<Move> checksAndCaptures;
+		std::vector<Move> checks;
+		std::vector<Move> captures;
+		std::vector<Move> others;
+	};
+
+	export bool isInCheck(Board const& board);
 	export bool isIllegalDueToCheck(Board const& board);
 
-	/* constexpr */ std::vector<Move> availableMovesRaw(Board const& board, PieceColor toPlay) {
+	/* constexpr */ MoveEnumerationResult availableMovesRaw(Board const& board, PieceColor toPlay) {
 		assert(toPlay == PieceColor::White || toPlay == PieceColor::Black);
 
-		std::vector<Move> result;
-		result.reserve(100);
+		MoveEnumerationResult result;
+		result.checksAndCaptures.reserve(100);
+		result.checks.reserve(100);
+		result.captures.reserve(100);
+		result.others.reserve(100);
 
 		PieceColor opponent = toPlay == PieceColor::White ? PieceColor::Black : PieceColor::White;
 
-		auto addResult = [&](Move move) {
+		auto addResult = [&](Move move, bool isEnPassant = false) {
 			Board newBoard = board;
 			newBoard.makeMove(move);
 			if (!isIllegalDueToCheck(newBoard)) {
-				result.push_back(move);
+				bool isCheck = isInCheck(newBoard);
+				bool isCapture = isEnPassant || board.at(move.to_) != Piece::PieceNone;
+				if (isCheck && isCapture) {
+					result.checksAndCaptures.push_back(move);
+				}
+				else if (isCheck) {
+					result.checks.push_back(move);
+				}
+				else if (isCapture) {
+					result.captures.push_back(move);
+				}
+				else {
+					result.others.push_back(move);
+				}
 			}
 		};
 		auto scan = [&](SquareIndex root, std::pair<char, char> step, size_t maxDist = 8) {
@@ -110,14 +135,14 @@ namespace cherry {
 				maxDist--;
 			}
 		};
-		auto maybeWithPromotion = [&](SquareIndex root, SquareIndex target) {
+		auto maybeWithPromotion = [&](SquareIndex root, SquareIndex target, bool isEnPassant) {
 			if (target.getRank() == 0 || target.getRank() == 7) {
 				for (auto const& type : promotionTypes) {
-					addResult(Move(root, target, type));
+					addResult(Move(root, target, type), isEnPassant);
 				}
 			}
 			else {
-				addResult(Move(root, target));
+				addResult(Move(root, target), isEnPassant);
 			}
 		};
 
@@ -162,7 +187,7 @@ namespace cherry {
 					if (board.at(nextSquare) == Piece::PieceNone) {
 						char nextRank = 7 - nextSquare.getRank();
 						// Regular movement
-						maybeWithPromotion(currentSquare, nextSquare);
+						maybeWithPromotion(currentSquare, nextSquare, false);
 						// Double movement, promotion is not possible here
 						if (((nextRank == 2 && step > 0) || (nextRank == 5 && step < 0)) && board.at(SquareIndex(i + 2 * step)) == Piece::PieceNone) {
 							addResult(Move(currentSquare, SquareIndex(i + 2 * step)));
@@ -172,13 +197,13 @@ namespace cherry {
 					if (currentSquare.getFile() != 0) {
 						nextSquare = SquareIndex(i + step - 1);
 						if (board.enPassantTarget_ == nextSquare || getPieceColor(board.at(nextSquare)) == opponent) {
-							maybeWithPromotion(currentSquare, nextSquare);
+							maybeWithPromotion(currentSquare, nextSquare, true);
 						}
 					}
 					if (currentSquare.getFile() != 7) {
 						nextSquare = SquareIndex(i + step + 1);
 						if (board.enPassantTarget_ == nextSquare || getPieceColor(board.at(nextSquare)) == opponent) {
-							maybeWithPromotion(currentSquare, nextSquare);
+							maybeWithPromotion(currentSquare, nextSquare, true);
 						}
 					}
 					break;
@@ -228,8 +253,16 @@ namespace cherry {
 		return result;
 	}
 
-	export /* constexpr */ std::vector<Move> availableMoves(Board const& board) {
+	export /* constexpr */ MoveEnumerationResult availableMoves(Board const& board) {
 		return availableMovesRaw(board, board.whiteToPlay_ ? PieceColor::White : PieceColor::Black);
+	}
+
+	export bool isInCheck(Board const& board) {
+		return
+			isSquareAttacked(
+				board,
+				board.whiteToPlay_ ? board.whiteKing_ : board.blackKing_,
+				board.whiteToPlay_ ? PieceColor::Black : PieceColor::White);
 	}
 
 	export bool isIllegalDueToCheck(Board const& board) {

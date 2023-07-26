@@ -6,7 +6,7 @@ import cherry.move;
 import cherry.moveEnumeration;
 
 cherry::Board currentBoard;
-std::vector<cherry::Move> result;
+cherry::MoveEnumerationResult result;
 
 void run(std::string_view name, cherry::Board board) {
 	cherry::benchmark::runBenchmark(name, [&]() {
