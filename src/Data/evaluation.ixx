@@ -34,7 +34,7 @@ export namespace cherry {
 			return value_ - other.value_;
 		}
 
-		void step() {
+		constexpr void step() {
 			if (isMate_) {
 				if (!myMate_) {
 					value_++;
@@ -46,7 +46,7 @@ export namespace cherry {
 			}
 		}
 
-		void unstep() {
+		constexpr void unstep() {
 			if (isMate_) {
 				if (myMate_) {
 					value_--;
@@ -63,12 +63,12 @@ export namespace cherry {
 		short value_;
 	};
 
-	Evaluation step(Evaluation eval) {
+	constexpr Evaluation step(Evaluation eval) {
 		eval.step();
 		return eval;
 	}
 
-	Evaluation unstep(Evaluation eval) {
+	constexpr Evaluation unstep(Evaluation eval) {
 		eval.unstep();
 		return eval;
 	}
