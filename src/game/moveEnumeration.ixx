@@ -79,6 +79,7 @@ namespace cherry {
 		assert(toPlay == PieceColor::White || toPlay == PieceColor::Black);
 
 		std::vector<Move> result;
+		result.reserve(100);
 
 		PieceColor opponent = toPlay == PieceColor::White ? PieceColor::Black : PieceColor::White;
 
