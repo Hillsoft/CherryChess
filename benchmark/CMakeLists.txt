@@ -14,3 +14,4 @@ target_link_libraries(${bench_name} PRIVATE CherryChessBenchmark)
 endfunction()
 
 cherry_bench("move_enumeration_benchmark" "benchmarks/moveEnumerationBenchmark.ixx")
+cherry_bench("search_benchmark" "benchmarks/searchBenchmark.ixx")
