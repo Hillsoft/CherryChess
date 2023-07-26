@@ -11,7 +11,7 @@ std::tuple<cherry::Evaluation, cherry::Move, int> result = std::tuple(cherry::Ev
 
 void run(std::string_view name, cherry::Board board) {
 	cherry::benchmark::runBenchmark(name, [&]() {
-		result = cherry::recursiveSearch(board, cherry::worstEval, cherry::bestEval, 4);
+		result = cherry::recursiveSearch(board, cherry::worstEval, cherry::bestEval, 4, 8);
 		});
 }
 
