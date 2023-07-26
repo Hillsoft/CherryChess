@@ -19,6 +19,11 @@ string(CONCAT CMAKE_EXPERIMENTAL_CXX_SCANDEP_SOURCE
 set(CMAKE_CXX_STANDARD 23)
 enable_testing()
 
+if (MSVC)
+  add_compile_options("/Zi")
+  add_link_options("/DEBUG")
+endif()
+
 project ("CherryChess")
 
 add_library(stdxx)
