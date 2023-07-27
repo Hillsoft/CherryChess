@@ -102,9 +102,14 @@ export namespace cherry {
 		}
 
 		Move stopSearch(uci::CommandEmitter* emitter) {
+			const auto start = std::chrono::steady_clock::now();
 			auto [eval, move, nodes] = recursiveSearch(currentPosition_, worstEval, bestEval, 4, 12);
 			if (emitter != nullptr) {
-				emitter->emitCommand(uci::command::UCIInfo(nodes, eval));
+				const auto elapsed = std::chrono::steady_clock::now() - start;
+				emitter->emitCommand(uci::command::UCIInfo({
+					.timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
+					.nodes = nodes,
+					.score = eval }));
 			}
 			return move;
 		}
