@@ -27,7 +27,7 @@ export namespace cherry {
 			// trim out non-extending moves
 			possibleMoves.others = {};
 			hasLegalMove = true;
-			bestResult = std::tuple(evaluatePosition(rootPosition), Move());
+			bestResult = std::pair(evaluatePosition(rootPosition), Move());
 			if (bestResult.first > alpha) {
 				alpha = bestResult.first;
 			}
