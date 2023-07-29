@@ -1,12 +1,14 @@
+module;
+
+#include "framework/test_path.h"
+
 export module test;
 
 import std;
 
-#include "framework/test_path.h"
-
 export namespace cherry::test {
 
-	constexpr auto kFilePath = constants::kFilePath;
+	const char *kFilePath = constants::kFilePath;
 
 	class TestRunner {
 	public:
