@@ -25,15 +25,15 @@ export namespace cherry {
 		template <size_t historySize>
 		void iterativeDeepening(Board const& rootPosition, InlineStack<Board, historySize>& history) {
 			int maxDepth = 0;
-			while (!shouldStop_.load(std::memory_order_relaxed) && maxDepth < 50) {
+			while (!shouldStop_.load(std::memory_order_relaxed) && maxDepth < 50 && !eval_.load(std::memory_order_relaxed).isMate_) {
 				maxDepth += 1;
 				auto [eval, move] = recursiveSearch(rootPosition, history, worstEval, bestEval, maxDepth, maxDepth + 2, false);
 				// We don't trust partial results...
 				if (!shouldStop_.load(std::memory_order_relaxed)) {
-					eval_.store(eval);
-					bestMove_.store(move);
+					eval_.store(eval, std::memory_order_relaxed);
+					bestMove_.store(move, std::memory_order_relaxed);
+					depth_.store(maxDepth, std::memory_order_relaxed);
 				}
-				depth_.store(maxDepth, std::memory_order_relaxed);
 			}
 			complete_.store(true, std::memory_order_release);
 		}
