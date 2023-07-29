@@ -10,6 +10,7 @@ export import cherry.uci.cmd.go;
 export import cherry.uci.cmd.isready;
 export import cherry.uci.cmd.position;
 export import cherry.uci.cmd.quit;
+export import cherry.uci.cmd.stop;
 export import cherry.uci.cmd.uci;
 
 namespace {
@@ -51,7 +52,7 @@ export namespace cherry::uci {
 		ToEngineCommand(auto cmd)
 			: command_(std::move(cmd)) {}
 
-		std::variant<command::Go, command::IsReady, command::Position, command::Quit, command::UCI> command_;
+		std::variant<command::Go, command::IsReady, command::Position, command::Quit, command::Stop, command::UCI> command_;
 	};
 
 	std::optional<ToEngineCommand> parseTokens(std::span<std::string_view> tokens) {
@@ -64,6 +65,9 @@ export namespace cherry::uci {
 		}
 		if (tokens[0] == "position") {
 			return command::Position(tokens.subspan(1));
+		}
+		if (tokens[0] == "stop") {
+			return command::Stop(tokens.subspan(1));
 		}
 		if (tokens[0] == "uci") {
 			return command::UCI(tokens.subspan(1));

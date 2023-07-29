@@ -30,6 +30,7 @@ export namespace cherry {
 					bestMove_.store(move);
 				}
 			}
+			complete_.store(true, std::memory_order_release);
 		}
 
 		std::tuple<Evaluation, Move> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
