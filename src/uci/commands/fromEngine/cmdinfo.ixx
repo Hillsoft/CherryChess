@@ -7,8 +7,8 @@ import cherry.evaluation;
 export namespace cherry::uci::command {
 
 	struct UCIInfoData {
-		std::optional<int> timeMs;
-		std::optional<int> nodes;
+		std::optional<long long> timeMs;
+		std::optional<long long> nodes;
 		std::optional<Evaluation> score;
 	};
 
