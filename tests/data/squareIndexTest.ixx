@@ -3,11 +3,14 @@ import test;
 
 import cherry.squareIndex;
 
-cherry::test::Test SquareIndexParsing("SquareIndexParsing", [](cherry::test::TestRunner& runner) {
-	runner.expectEq<std::string_view>("a1", cherry::SquareIndex("a1").getCode());
-	runner.expectEq<std::string_view>("c3", cherry::SquareIndex("c3").getCode());
-	runner.expectEq<std::string_view>("e1", cherry::SquareIndex("e1").getCode());
-	runner.expectEq<std::string_view>("h8", cherry::SquareIndex("h8").getCode());
+cherry::test::TestP<std::string> SquareIndexParsing("SquareIndexParsing", [](cherry::test::TestRunner& runner, std::string const& code) {
+	runner.expectEq<std::string_view>(code, cherry::SquareIndex(code).getCode());
+	},
+	{
+		{"a1", "a1"},
+		{"c3", "c3"},
+		{"e1", "e1"},
+		{"h8", "h8"}
 	});
 
 int main() {
