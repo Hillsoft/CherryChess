@@ -48,6 +48,7 @@ export namespace cherry {
 					emitter_->emitCommand(uci::command::UCIInfo({
 						.timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
 						.nodes = worker_.nodesVisited_.load(std::memory_order_relaxed),
+						.depth = worker_.depth_.load(std::memory_order_relaxed),
 						.score = worker_.eval_.load(std::memory_order_relaxed)}));
 					std::this_thread::sleep_for(std::chrono::milliseconds(100));
 

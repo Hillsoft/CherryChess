@@ -16,6 +16,7 @@ export namespace cherry {
 			bestMove_ = Move();
 			eval_ = Evaluation(Evaluation::CPTag(), 0);
 			nodesVisited_ = 0;
+			depth_ = 0;
 			complete_ = false;
 			shouldStop_ = false;
 		}
@@ -29,6 +30,7 @@ export namespace cherry {
 					eval_.store(eval);
 					bestMove_.store(move);
 				}
+				depth_.store(maxDepth, std::memory_order_relaxed);
 			}
 			complete_.store(true, std::memory_order_release);
 		}
@@ -127,6 +129,7 @@ export namespace cherry {
 		std::atomic<Move> bestMove_;
 		std::atomic<Evaluation> eval_;
 		std::atomic<int> nodesVisited_;
+		std::atomic<int> depth_;
 		std::atomic<bool> complete_;
 		std::atomic<bool> shouldStop_;
 	};
