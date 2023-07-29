@@ -6,8 +6,8 @@ export namespace cherry::test {
 
 	class TestRunner {
 	public:
-		TestRunner(std::string name, void(*runTest)(TestRunner& owner))
-			: name_(std::move(name)), run_(runTest) {}
+		TestRunner(std::string name, std::function<void(TestRunner& owner)> runTest)
+			: name_(std::move(name)), run_(std::move(runTest)) {}
 
 		std::string const& getName() const {
 			return name_;
@@ -46,7 +46,7 @@ export namespace cherry::test {
 
 	private:
 		std::string name_;
-		void(*run_)(TestRunner& owner);
+		std::function<void(TestRunner& owner)> run_;
 		std::vector<std::string> errors_;
 	};
 
@@ -57,9 +57,26 @@ export namespace cherry::test {
 	
 	class Test {
 	public:
-		Test(std::string name, void(*runTest)(TestRunner& owner)) {
+		Test(std::string name, std::function<void(TestRunner& owner)> runTest) {
 			getTestRunners().emplace_back(std::move(name), runTest);
 		}
+	};
+
+	template<typename TParam>
+	class TestP {
+	public:
+		TestP(std::string name, std::function<void(TestRunner& owner, const TParam& param)> runTest, std::vector<std::pair<std::string, TParam>> params)
+			: runTest_(std::move(runTest)), params_(std::move(params)) {
+			for (const auto& [paramName, paramData] : params_) {
+				getTestRunners().emplace_back(std::format("{}: {}", name, paramName), [&paramData, &runTest_ = this->runTest_](TestRunner& owner) {
+					runTest_(owner, paramData);
+					});
+			}
+		}
+
+	private:
+		std::function<void(TestRunner& owner, const TParam& param)> runTest_;
+		std::vector<std::pair<std::string, TParam>> params_;
 	};
 
 	bool runAllTests() {
