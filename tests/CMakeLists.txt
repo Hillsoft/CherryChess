@@ -14,6 +14,7 @@ target_include_directories(test_framework PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 function(cherry_test test_name test_path)
 add_executable(${test_name} ${test_path})
+target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(${test_name} PRIVATE stdxx)
 target_link_libraries(${test_name} PRIVATE test_framework)
 target_link_libraries(${test_name} PRIVATE CherryChessSrc)
