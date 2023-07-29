@@ -5,3 +5,8 @@ h6h8
 g2g7
 6rk/6pp/8/4N3/8/8/1K6/8 w - - 0 1
 e5f7
+=Fork
+2q3k1/pp3pp1/2p4p/3R4/8/8/PP3PP1/3R2K1 w - - 0 1
+d5d8
+r1r3k1/pp3ppp/6q1/3N4/8/1P5P/P4PP1/R4RK1 w - - 0 1
+d5e7
