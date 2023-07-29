@@ -48,20 +48,32 @@ export namespace cherry {
 			supervisorThread_ = std::jthread([this, allowedTime]() {
 				const auto start = std::chrono::steady_clock::now();
 				auto now = start;
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
-				do {
-					now = std::chrono::steady_clock::now();
-					const auto elapsed = now - start;
-					emitter_->emitCommand(uci::command::UCIInfo({
-						.timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
-						.nodes = worker_.nodesVisited_.load(std::memory_order_relaxed),
-						.depth = worker_.depth_.load(std::memory_order_relaxed),
-						.score = worker_.eval_.load(std::memory_order_relaxed)}));
-					std::this_thread::sleep_for(std::chrono::milliseconds(100));
-				} while (!worker_.complete_.load(std::memory_order_acquire) && std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() < allowedTime);
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				char infoSpinner = 0;
+				while (!worker_.complete_.load(std::memory_order_acquire) && std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() < allowedTime) {
+					infoSpinner = (infoSpinner + 1) % 10;
+					if (infoSpinner == 0) {
+						now = std::chrono::steady_clock::now();
+						const auto elapsed = now - start;
+						emitter_->emitCommand(uci::command::UCIInfo({
+							.timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
+							.nodes = worker_.nodesVisited_.load(std::memory_order_relaxed),
+							.depth = worker_.depth_.load(std::memory_order_relaxed),
+							.score = worker_.eval_.load(std::memory_order_relaxed) }));
+					}
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				}
 
 				worker_.shouldStop_.store(true, std::memory_order_relaxed);
 				workerThread_.join();
+
+				now = std::chrono::steady_clock::now();
+				const auto elapsed = now - start;
+				emitter_->emitCommand(uci::command::UCIInfo({
+					.timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
+					.nodes = worker_.nodesVisited_.load(std::memory_order_relaxed),
+					.depth = worker_.depth_.load(std::memory_order_relaxed),
+					.score = worker_.eval_.load(std::memory_order_relaxed) }));
 				Move bestMove = worker_.bestMove_.load(std::memory_order_relaxed);
 				if (bestMove != Move()) {
 					emitter_->emitCommand(uci::command::BestMove(bestMove));
