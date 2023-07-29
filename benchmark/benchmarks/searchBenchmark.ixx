@@ -4,14 +4,15 @@ import benchmark;
 import cherry.board;
 import cherry.evaluation;
 import cherry.move;
-import cherry.searchManager;
+import cherry.searchWorker;
 
 cherry::Board currentBoard;
-std::tuple<cherry::Evaluation, cherry::Move, int> result = std::tuple(cherry::Evaluation(cherry::Evaluation::CPTag(), 0), cherry::Move(), 0);
+std::tuple<cherry::Evaluation, cherry::Move> result = std::tuple(cherry::Evaluation(cherry::Evaluation::CPTag(), 0), cherry::Move());
 
 void run(std::string_view name, cherry::Board board) {
 	cherry::benchmark::runBenchmark(name, [&]() {
-		result = cherry::recursiveSearch(board, cherry::worstEval, cherry::bestEval, 4, 8);
+		cherry::SearchWorker searcher;
+		result = searcher.recursiveSearch(board, cherry::worstEval, cherry::bestEval, 4, 8);
 		});
 }
 
