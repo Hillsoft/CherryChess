@@ -52,24 +52,20 @@ export namespace cherry {
 				do {
 					now = std::chrono::steady_clock::now();
 					const auto elapsed = now - start;
-					int nodesVisited = worker_.nodesVisited_.load(std::memory_order_relaxed);
 					emitter_->emitCommand(uci::command::UCIInfo({
 						.timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
 						.nodes = worker_.nodesVisited_.load(std::memory_order_relaxed),
 						.depth = worker_.depth_.load(std::memory_order_relaxed),
 						.score = worker_.eval_.load(std::memory_order_relaxed)}));
 					std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-					if (worker_.complete_.load(std::memory_order_acquire)) {
-						emitter_->emitCommand(uci::command::BestMove(worker_.bestMove_.load(std::memory_order_relaxed)));
-						return;
-					}
-
-				} while (std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() < allowedTime);
+				} while (!worker_.complete_.load(std::memory_order_acquire) && std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() < allowedTime);
 
 				worker_.shouldStop_.store(true, std::memory_order_relaxed);
 				workerThread_.join();
-				emitter_->emitCommand(uci::command::BestMove(worker_.bestMove_.load(std::memory_order_relaxed)));
+				Move bestMove = worker_.bestMove_.load(std::memory_order_relaxed);
+				if (bestMove != nullMove) {
+					emitter_->emitCommand(uci::command::BestMove(bestMove));
+				}
 				});
 		}
 
