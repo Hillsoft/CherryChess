@@ -39,7 +39,7 @@ cherry::test::TestP<std::pair<cherry::Board, cherry::Move>> Tactics("Tactics", [
 	const auto& [board, expectedMove] = param;
 
 	cherry::SearchManager searchManager;
-	searchManager.setPosition(board);
+	searchManager.setPosition(board, {});
 	searchManager.go(std::nullopt, std::nullopt);
 	cherry::Move move = searchManager.bestMoveBlocking();
 

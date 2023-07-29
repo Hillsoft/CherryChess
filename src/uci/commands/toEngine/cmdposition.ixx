@@ -15,7 +15,7 @@ export namespace cherry::uci::command {
 			}
 			auto cursor = tokens.begin();
 			if (*cursor == "startpos") {
-				position_ = startingPosition;
+				rootPosition_ = startingPosition;
 				cursor++;
 			}
 			else if (*cursor == "fen") {
@@ -30,7 +30,7 @@ export namespace cherry::uci::command {
 				}
 				fenstream << *cursor;
 				cursor++;
-				position_ = Board(fenstream.str());
+				rootPosition_ = Board(fenstream.str());
 			}
 			else {
 				throw std::runtime_error("Unsupported position command");
@@ -44,15 +44,16 @@ export namespace cherry::uci::command {
 			}
 			cursor++;
 			for (; cursor != tokens.end(); cursor++) {
-				position_.makeMove(Move(*cursor));
+				moves_.emplace_back(*cursor);
 			}
 		}
 
-		Board position_;
+		Board rootPosition_;
+		std::vector<Move> moves_;
 	};
 
 	void handleCommand(CommandEmitter& emitter, Position const& command) {
-		getGlobalSearchManager().setPosition(command.position_);
+		getGlobalSearchManager().setPosition(command.rootPosition_, command.moves_);
 	}
 
 } // namespace cherry::uci::command

@@ -23,8 +23,16 @@ export namespace cherry {
 			emitter_ = emitter;
 		}
 
-		void setPosition(Board position) {
-			currentPosition_ = std::move(position);
+		void setPosition(Board rootPosition, std::vector<Move> const& moves) {
+			while (history_.size() > 0) {
+				history_.pop();
+			}
+
+			currentPosition_ = rootPosition;
+			for (const auto& move : moves) {
+				history_.push(currentPosition_);
+				currentPosition_.makeMove(move);
+			}
 		}
 
 		void go(std::optional<int> wTime, std::optional<int> bTime) {
@@ -34,7 +42,7 @@ export namespace cherry {
 
 			worker_.reset();
 			workerThread_ = std::jthread([this]() {
-				worker_.iterativeDeepening(currentPosition_);
+				worker_.iterativeDeepening(currentPosition_, history_);
 				});
 
 			supervisorThread_ = std::jthread([this, allowedTime]() {
@@ -80,6 +88,7 @@ export namespace cherry {
 		SearchWorker worker_;
 		std::jthread supervisorThread_;
 		std::jthread workerThread_;
+		InlineStack<Board, 512> history_;
 	};
 
 	SearchManager& getGlobalSearchManager() {

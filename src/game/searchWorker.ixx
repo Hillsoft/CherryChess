@@ -4,6 +4,7 @@ import std;
 
 import cherry.board;
 import cherry.evaluation;
+import cherry.inlineStack;
 import cherry.move;
 import cherry.moveEnumeration;
 import cherry.positionEval;
@@ -21,11 +22,12 @@ export namespace cherry {
 			shouldStop_ = false;
 		}
 
-		void iterativeDeepening(Board const& rootPosition) {
+		template <size_t historySize>
+		void iterativeDeepening(Board const& rootPosition, InlineStack<Board, historySize>& history) {
 			int maxDepth = 0;
 			while (!shouldStop_.load(std::memory_order_relaxed)) {
 				maxDepth += 2;
-				auto [eval, move] = recursiveSearch(rootPosition, worstEval, bestEval, maxDepth, maxDepth + 2, false);
+				auto [eval, move] = recursiveSearch(rootPosition, history, worstEval, bestEval, maxDepth, maxDepth + 2, false);
 				// We don't trust partial results...
 				if (!shouldStop_.load(std::memory_order_relaxed)) {
 					eval_.store(eval);
@@ -36,12 +38,27 @@ export namespace cherry {
 			complete_.store(true, std::memory_order_release);
 		}
 
-		std::tuple<Evaluation, Move> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
+		template <size_t historySize>
+		std::tuple<Evaluation, Move> recursiveSearch(Board const& rootPosition, InlineStack<Board, historySize>& history, Evaluation alpha, Evaluation beta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
 			if (shouldStop_.load(std::memory_order_relaxed)) {
 				return std::tuple(worstEval, Move());
 			}
 
 			nodesVisited_.store(nodesVisited_.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+
+			// Check for three-fold repetition
+			char repetitionCount = 0;
+			for (auto& position : history) {
+				if (position.data_ == rootPosition.data_) {
+					repetitionCount++;
+				}
+			}
+			if (repetitionCount >= 2) {
+				return std::tuple(Evaluation(Evaluation::CPTag(), 0), Move());
+			}
+
+			InlineStackWriter(history, rootPosition);
+
 			if (maxExtensionDepth <= 0) {
 				return std::tuple(evaluatePosition(rootPosition), Move());
 			}
@@ -72,7 +89,7 @@ export namespace cherry {
 			auto searchMove = [&](Move move) -> bool {
 				Board resultingPosition = rootPosition;
 				resultingPosition.makeMove(move);
-				auto [currentEval, _] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), maxDepth - 1, maxExtensionDepth - 1, false);
+				auto [currentEval, _] = recursiveSearch(resultingPosition, history, unstep(beta), unstep(alpha), maxDepth - 1, maxExtensionDepth - 1, false);
 				currentEval.step();
 
 				if (currentEval > beta) {
