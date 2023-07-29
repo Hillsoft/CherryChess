@@ -9,6 +9,9 @@ export namespace cherry {
 		struct CPTag {};
 		struct MateTag {};
 
+		constexpr Evaluation()
+			: Evaluation(CPTag(), 0) {}
+
 		constexpr Evaluation(CPTag /* tag */, short value)
 			: value_(value), myMate_(false), isMate_(false) {}
 

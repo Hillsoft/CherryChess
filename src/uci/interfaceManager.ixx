@@ -3,6 +3,7 @@ export module cherry.uci.interfaceManager;
 import std;
 
 import cherry.concurrentQueue;
+import cherry.searchManager;
 import cherry.uci.commandEmitter;
 import cherry.uci.toEngine;
 
@@ -12,7 +13,8 @@ export namespace cherry::uci {
 	public:
 		InterfaceManager()
 			: inputThread_([this]() { runInput(); }),
-			workerThread_([this]() { runWorker(); }) {}
+			workerThread_([this]() { runWorker(); }) {
+		}
 
 		~InterfaceManager() {
 			inputThread_.join();

@@ -12,7 +12,19 @@ export namespace cherry {
 
 	class SearchWorker {
 	public:
-		std::tuple<Evaluation, Move> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int maxDepth, int maxExtensionDepth) {
+		void reset() {
+			bestMove_ = Move();
+			eval_ = Evaluation(Evaluation::CPTag(), 0);
+			nodesVisited_ = 0;
+			complete_ = false;
+			shouldStop_ = false;
+		}
+
+		std::tuple<Evaluation, Move> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
+			if (shouldStop_.load(std::memory_order_relaxed)) {
+				return std::tuple(worstEval, Move());
+			}
+
 			nodesVisited_.store(nodesVisited_.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 			if (maxExtensionDepth <= 0) {
 				return std::tuple(evaluatePosition(rootPosition), Move());
@@ -44,7 +56,7 @@ export namespace cherry {
 			auto searchMove = [&](Move move) -> bool {
 				Board resultingPosition = rootPosition;
 				resultingPosition.makeMove(move);
-				auto [currentEval, _] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), maxDepth - 1, maxExtensionDepth - 1);
+				auto [currentEval, _] = recursiveSearch(resultingPosition, unstep(beta), unstep(alpha), maxDepth - 1, maxExtensionDepth - 1, false);
 				currentEval.step();
 
 				if (currentEval > beta) {
@@ -58,6 +70,10 @@ export namespace cherry {
 					bestResult = std::pair(currentEval, move);
 					if (currentEval > alpha) {
 						alpha = currentEval;
+					}
+					if (topLevel) {
+						eval_.store(currentEval, std::memory_order_relaxed);
+						bestMove_.store(move, std::memory_order_relaxed);
 					}
 				}
 				return true;
@@ -88,10 +104,18 @@ export namespace cherry {
 				}
 			}
 
+			if (topLevel) {
+				complete_.store(true, std::memory_order_release);
+			}
+
 			return result();
 		}
-
+		
+		std::atomic<Move> bestMove_;
+		std::atomic<Evaluation> eval_;
 		std::atomic<int> nodesVisited_;
+		std::atomic<bool> complete_;
+		std::atomic<bool> shouldStop_;
 	};
 
 } // namsepace cherry
