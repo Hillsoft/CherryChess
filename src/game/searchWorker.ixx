@@ -20,6 +20,18 @@ export namespace cherry {
 			shouldStop_ = false;
 		}
 
+		void iterativeDeepening(Board const& rootPosition) {
+			int maxDepth = 2;
+			while (!shouldStop_.load(std::memory_order_relaxed)) {
+				auto [eval, move] = recursiveSearch(rootPosition, worstEval, bestEval, maxDepth, maxDepth + 2, false);
+				// We don't trust partial results...
+				if (!shouldStop_.load(std::memory_order_relaxed)) {
+					eval_.store(eval);
+					bestMove_.store(move);
+				}
+			}
+		}
+
 		std::tuple<Evaluation, Move> recursiveSearch(Board const& rootPosition, Evaluation alpha, Evaluation beta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
 			if (shouldStop_.load(std::memory_order_relaxed)) {
 				return std::tuple(worstEval, Move());

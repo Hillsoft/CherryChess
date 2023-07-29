@@ -30,11 +30,11 @@ export namespace cherry {
 		void go(std::optional<int> wTime, std::optional<int> bTime) {
 			std::optional<int> m_time = currentPosition_.whiteToPlay_ ? wTime : bTime;
 			// Crudely assume there will be another 20 moves and we should use our time evenly
-			int allowedTime = m_time.has_value() ? (*m_time / 20) : 1000000;
+			int allowedTime = m_time.has_value() ? (*m_time / 20) : 1000;
 
 			worker_.reset();
 			workerThread_ = std::jthread([this]() {
-				worker_.recursiveSearch(currentPosition_, worstEval, bestEval, 4, 12);
+				worker_.iterativeDeepening(currentPosition_);
 				});
 
 			supervisorThread_ = std::jthread([this, allowedTime]() {
@@ -69,7 +69,7 @@ export namespace cherry {
 		}
 
 		Move bestMoveBlocking() {
-			workerThread_.join();
+			supervisorThread_.join();
 			return worker_.bestMove_.load(std::memory_order_relaxed);
 		}
 
