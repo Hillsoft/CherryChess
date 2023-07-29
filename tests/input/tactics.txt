@@ -10,3 +10,19 @@ e5f7
 d5d8
 r1r3k1/pp3ppp/6q1/3N4/8/1P5P/P4PP1/R4RK1 w - - 0 1
 d5e7
+r5k1/p4ppp/1p4n1/8/4r3/1B6/PP3PPP/R4RK1 w - - 0 1
+b3d5
+1k2r2r/1p5p/p4bp1/5p2/8/2P5/PP1Q1PPP/3R1RK1 w - - 0 1
+d2d6
+=Pin
+r2q4/pp1b1kp1/2p1r1p1/5p2/8/3BR2Q/PP3PPP/R5K1 w - - 0 1
+d3c4
+1k6/1pp5/pb6/5pp1/P7/1P2N3/5KPP/8 b - - 0 1
+f5f4
+=Discovered Check
+r4rk1/pb3ppp/1p6/2pp4/8/2QP2P1/PPP2PKP/R3R3 b - - 0 1
+d5d4
+2qr2k1/p2r2pp/1Pp5/8/2N5/1Q5P/P4PP1/R4RK1 w - - 0 1
+c4d6
+r3r1k1/pq2n1pp/1p3pb1/8/5P1Q/2N5/PP4PP/R3KB1R b - - 0 1
+e7f5
