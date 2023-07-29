@@ -22,8 +22,9 @@ export namespace cherry {
 		}
 
 		void iterativeDeepening(Board const& rootPosition) {
-			int maxDepth = 2;
+			int maxDepth = 0;
 			while (!shouldStop_.load(std::memory_order_relaxed)) {
+				maxDepth += 2;
 				auto [eval, move] = recursiveSearch(rootPosition, worstEval, bestEval, maxDepth, maxDepth + 2, false);
 				// We don't trust partial results...
 				if (!shouldStop_.load(std::memory_order_relaxed)) {
