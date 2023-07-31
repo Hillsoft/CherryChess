@@ -23,15 +23,47 @@ export namespace cherry {
 		}
 
 		template <size_t historySize>
-		void iterativeDeepening(Board const& rootPosition, InlineStack<Board, historySize>& history, int maxDepthLimit = 50) {
+		void iterativeDeepening(Board const& rootPosition, InlineStack<Board, historySize>& history, Evaluation baseAlpha = worstEval, Evaluation baseBeta = bestEval, int maxDepthLimit = 50) {
+			InlineStackWriter(history, rootPosition);
+			std::vector<std::pair<Move, Evaluation>> topLevelMoves;
+
+			{
+				MoveEnumerationResult enumeration = availableMoves(rootPosition);
+				topLevelMoves.reserve(enumeration.checksAndCaptures.size() + enumeration.checks.size() + enumeration.captures.size() + enumeration.others.size());
+
+				for (auto const& move : enumeration.checksAndCaptures) {
+					topLevelMoves.emplace_back(move, Evaluation());
+				}
+				for (auto const& move : enumeration.checks) {
+					topLevelMoves.emplace_back(move, Evaluation());
+				}
+				for (auto const& move : enumeration.captures) {
+					topLevelMoves.emplace_back(move, Evaluation());
+				}
+				for (auto const& move : enumeration.others) {
+					topLevelMoves.emplace_back(move, Evaluation());
+				}
+			}
+
 			int maxDepth = 0;
 			while (!shouldStop_.load(std::memory_order_relaxed) && maxDepth < maxDepthLimit && !eval_.load(std::memory_order_relaxed).isMate_) {
 				maxDepth += 1;
-				auto [eval, move] = recursiveSearch(rootPosition, history, worstEval, bestEval, maxDepth, maxDepth + 2, false);
+
+				Evaluation alpha = baseAlpha;
+
+				for (auto& [move, eval] : topLevelMoves) {
+					Board newPosition = rootPosition;
+					newPosition.makeMove(move);
+					eval = step(std::get<0>(recursiveSearch(newPosition, history, unstep(baseBeta), unstep(alpha), maxDepth - 1, maxDepth + 2 - 1, false)));
+					if (eval > alpha) {
+						alpha = eval;
+					}
+				}
+				std::sort(topLevelMoves.begin(), topLevelMoves.end(), [](auto& a, auto& b) { return a.second > b.second; });
 				// We don't trust partial results...
 				if (!shouldStop_.load(std::memory_order_relaxed)) {
-					eval_.store(eval, std::memory_order_relaxed);
-					bestMove_.store(move, std::memory_order_relaxed);
+					eval_.store(topLevelMoves[0].second, std::memory_order_relaxed);
+					bestMove_.store(topLevelMoves[0].first, std::memory_order_relaxed);
 					depth_.store(maxDepth, std::memory_order_relaxed);
 				}
 			}
