@@ -42,6 +42,15 @@ export namespace cherry {
 			runningTotal -= std::min<char>(position.blackKing_.getFile(), (char)7 - position.blackKing_.getFile());
 		}
 
+		if (isInCheck(position)) {
+			if (position.whiteToPlay_) {
+				// runningTotal -= 200;
+			}
+			else {
+				// runningTotal += 200;
+			}
+		}
+
 		return Evaluation(Evaluation::CPTag(), runningTotal * (position.whiteToPlay_ ? 1 : -1));
 	}
 

@@ -33,7 +33,7 @@ d7b5
 =Discovered Check
 r4rk1/pb3ppp/1p6/2pp4/8/2QP2P1/PPP2PKP/R3R3 b - - 0 1
 d5d4
-2qr2k1/p2r2pp/1Pp5/8/2N5/1Q5P/P4PP1/R4RK1 w - - 0 1
+2qr2k1/p2r2pp/2p5/8/2N5/1Q5P/P4PP1/R4RK1 w - - 0 1
 c4d6
 r3r1k1/pq2n1pp/1p3pb1/8/5P1Q/2N5/PP4PP/R3KB1R b - - 0 1
 e7f5
@@ -48,4 +48,4 @@ e2e6
 
 =Promotion
 4k3/qP6/8/8/8/7R/8/7K w - - 0 1
-h3h8
+b7b8r

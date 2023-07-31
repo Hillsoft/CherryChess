@@ -75,9 +75,6 @@ namespace cherry {
 
 	export struct MoveEnumerationResult {
 	public:
-		std::vector<Move> checksAndCaptures;
-		std::vector<Move> checks;
-		std::vector<Move> captures;
 		std::vector<Move> others;
 	};
 
@@ -88,9 +85,6 @@ namespace cherry {
 		assert(toPlay == PieceColor::White || toPlay == PieceColor::Black);
 
 		MoveEnumerationResult result;
-		result.checksAndCaptures.reserve(100);
-		result.checks.reserve(100);
-		result.captures.reserve(100);
 		result.others.reserve(100);
 
 		PieceColor opponent = toPlay == PieceColor::White ? PieceColor::Black : PieceColor::White;
@@ -99,20 +93,7 @@ namespace cherry {
 			Board newBoard = board;
 			newBoard.makeMove(move);
 			if (!isIllegalDueToCheck(newBoard)) {
-				bool isCheck = isInCheck(newBoard);
-				bool isCapture = isEnPassant || board.at(move.to_) != Piece::PieceNone;
-				if (isCheck && isCapture) {
-					result.checksAndCaptures.push_back(move);
-				}
-				else if (isCheck) {
-					result.checks.push_back(move);
-				}
-				else if (isCapture) {
-					result.captures.push_back(move);
-				}
-				else {
-					result.others.push_back(move);
-				}
+				result.others.push_back(move);
 			}
 		};
 		auto scan = [&](SquareIndex root, std::pair<char, char> step, size_t maxDist = 8) {

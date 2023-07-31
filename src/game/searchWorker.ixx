@@ -29,17 +29,8 @@ export namespace cherry {
 
 			{
 				MoveEnumerationResult enumeration = availableMoves(rootPosition);
-				topLevelMoves.reserve(enumeration.checksAndCaptures.size() + enumeration.checks.size() + enumeration.captures.size() + enumeration.others.size());
+				topLevelMoves.reserve(enumeration.others.size());
 
-				for (auto const& move : enumeration.checksAndCaptures) {
-					topLevelMoves.emplace_back(move, Evaluation());
-				}
-				for (auto const& move : enumeration.checks) {
-					topLevelMoves.emplace_back(move, Evaluation());
-				}
-				for (auto const& move : enumeration.captures) {
-					topLevelMoves.emplace_back(move, Evaluation());
-				}
 				for (auto const& move : enumeration.others) {
 					topLevelMoves.emplace_back(move, Evaluation());
 				}
@@ -54,7 +45,7 @@ export namespace cherry {
 				for (auto& [move, eval] : topLevelMoves) {
 					Board newPosition = rootPosition;
 					newPosition.makeMove(move);
-					eval = step(std::get<0>(recursiveSearch(newPosition, history, unstep(baseBeta), unstep(alpha), maxDepth - 1, maxDepth + 2 - 1, false)));
+					eval = step(std::get<0>(recursiveSearch(newPosition, history, unstep(baseBeta), unstep(alpha), maxDepth - 1, maxDepth + 1 - 1, false)));
 					if (eval > alpha) {
 						alpha = eval;
 					}
@@ -71,9 +62,9 @@ export namespace cherry {
 		}
 
 		template <size_t historySize>
-		std::tuple<Evaluation, Move> recursiveSearch(Board const& rootPosition, InlineStack<Board, historySize>& history, Evaluation alpha, Evaluation beta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
+		std::pair<Evaluation, Move> recursiveSearch(Board const& rootPosition, InlineStack<Board, historySize>& history, Evaluation baseAlpha, Evaluation baseBeta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
 			if (shouldStop_.load(std::memory_order_relaxed)) {
-				return std::tuple(worstEval, Move());
+				return std::pair(worstEval, Move());
 			}
 
 			nodesVisited_.store(nodesVisited_.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
@@ -86,94 +77,67 @@ export namespace cherry {
 				}
 			}
 			if (repetitionCount >= 2) {
-				return std::tuple(Evaluation(Evaluation::CPTag(), 0), Move());
+				return std::pair(Evaluation(Evaluation::CPTag(), 0), Move());
 			}
 
 			InlineStackWriter(history, rootPosition);
 
 			if (maxExtensionDepth <= 0) {
-				return std::tuple(evaluatePosition(rootPosition), Move());
+				return std::pair(evaluatePosition(rootPosition), Move());
 			}
 
-			MoveEnumerationResult possibleMoves = availableMoves(rootPosition);
 
-			std::pair<Evaluation, Move> bestResult(worstEval, Move());
-			bool hasLegalMove = false;
+			std::vector<std::pair<Evaluation, Move>> possibleMoves;
+			{
+				MoveEnumerationResult enumeration = availableMoves(rootPosition);
 
-			if (maxDepth <= 0) {
-				// trim out non-extending moves
-				possibleMoves.others = {};
-				hasLegalMove = true;
-				bestResult = std::pair(evaluatePosition(rootPosition), Move());
-				if (bestResult.first > alpha) {
-					alpha = bestResult.first;
+				if (maxDepth <= 0) {
+					Evaluation currentEval = evaluatePosition(rootPosition);
+					if (currentEval > baseAlpha) {
+						baseAlpha = currentEval;
+					}
+					if (currentEval > baseBeta) {
+						return std::pair(evaluatePosition(rootPosition), Move());
+					}
+				}
+
+				possibleMoves.reserve(enumeration.others.size());
+
+				for (auto const& move : enumeration.others) {
+					possibleMoves.emplace_back(Evaluation(), move);
 				}
 			}
 
-			auto result = [&]() {
-				if (!hasLegalMove) {
-					return std::tuple(terminalEval(rootPosition), Move());
+			if (possibleMoves.size() == 0) {
+				if (maxDepth <= 0) {
+					return std::pair(evaluatePosition(rootPosition), Move());
 				}
+				return std::tuple(terminalEval(rootPosition), Move());
+			}
 
-				return std::tuple(bestResult.first, bestResult.second);
-			};
+			for (int subDepth = 0; subDepth <= maxDepth - 1; subDepth++) {
+				Evaluation alpha = baseAlpha;
+				for (auto & [eval, move] : possibleMoves) {
+					Board resultingPosition = rootPosition;
+					resultingPosition.makeMove(move);
+					auto [currentEval, _] = recursiveSearch(resultingPosition, history, unstep(baseBeta), unstep(alpha), std::min(subDepth, maxDepth - 1), subDepth, false);
+					currentEval.step();
+					eval = currentEval;
 
-			auto searchMove = [&](Move move) -> bool {
-				Board resultingPosition = rootPosition;
-				resultingPosition.makeMove(move);
-				auto [currentEval, _] = recursiveSearch(resultingPosition, history, unstep(beta), unstep(alpha), maxDepth - 1, maxExtensionDepth - 1, false);
-				currentEval.step();
-
-				if (currentEval > beta) {
-					hasLegalMove = true;
-					bestResult = std::pair(currentEval, move);
-					return false;
-				}
-
-				if (currentEval > bestResult.first) {
-					hasLegalMove = true;
-					bestResult = std::pair(currentEval, move);
+					if (currentEval > baseBeta) {
+						break;
+					}
 					if (currentEval > alpha) {
 						alpha = currentEval;
 					}
-					if (topLevel) {
-						eval_.store(currentEval, std::memory_order_relaxed);
-						bestMove_.store(move, std::memory_order_relaxed);
-					}
 				}
-				return true;
-			};
-
-			for (auto const& move : possibleMoves.checksAndCaptures) {
-				bool shouldContinue = searchMove(move);
-				if (!shouldContinue) {
-					return result();
+				std::sort(possibleMoves.begin(), possibleMoves.end(), [](auto& a, auto& b) { return a.first > b.first; });
+				if (subDepth == 0 && maxDepth <= 0) {
+					// We are in search extension, only keep the most interesting moves
+					possibleMoves.resize(std::min<size_t>(5, possibleMoves.size()));
 				}
 			}
-			for (auto const& move : possibleMoves.checks) {
-				bool shouldContinue = searchMove(move);
-				if (!shouldContinue) {
-					return result();
-				}
-			}
-			for (auto const& move : possibleMoves.captures) {
-				bool shouldContinue = searchMove(move);
-				if (!shouldContinue) {
-					return result();
-				}
-			}
-			for (auto const& move : possibleMoves.others) {
-				bool shouldContinue = searchMove(move);
-				if (!shouldContinue) {
-					return result();
-				}
-			}
-
-			if (topLevel) {
-				complete_.store(true, std::memory_order_release);
-			}
-
-			return result();
+			return possibleMoves[0];
 		}
 		
 		std::atomic<Move> bestMove_;

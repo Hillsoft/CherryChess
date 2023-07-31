@@ -6,18 +6,9 @@ import cherry.moveEnumeration;
 import cherry.squareIndex;
 
 void compareResults(cherry::test::TestRunner& runner, cherry::MoveEnumerationResult& expected, cherry::MoveEnumerationResult& actual) {
-	std::sort(expected.checksAndCaptures.begin(), expected.checksAndCaptures.end());
-	std::sort(expected.checks.begin(), expected.checks.end());
-	std::sort(expected.captures.begin(), expected.captures.end());
 	std::sort(expected.others.begin(), expected.others.end());
-	std::sort(actual.checksAndCaptures.begin(), actual.checksAndCaptures.end());
-	std::sort(actual.checks.begin(), actual.checks.end());
-	std::sort(actual.captures.begin(), actual.captures.end());
 	std::sort(actual.others.begin(), actual.others.end());
 
-	runner.expectEq(expected.checksAndCaptures, actual.checksAndCaptures);
-	runner.expectEq(expected.checks, actual.checks);
-	runner.expectEq(expected.captures, actual.captures);
 	runner.expectEq(expected.others, actual.others);
 }
 
@@ -44,10 +35,8 @@ cherry::test::Test moveKnight("MoveKnight", [](cherry::test::TestRunner& runner)
 	cherry::Board const board("8/8/6k1/8/2K2n2/3P4/8/8 b - - 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.captures = {
-			cherry::Move("f4d3")
-		},
 		.others = {
+			cherry::Move("f4d3"),
 			// King moves
 			cherry::Move("g6f7"),
 			cherry::Move("g6g7"),
@@ -74,14 +63,10 @@ cherry::test::Test moveRook("MoveRook", [](cherry::test::TestRunner& runner) {
 	cherry::Board const board("8/4p3/6k1/8/2K1R3/8/8/8 w - - 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.checks = {
+		.others = {
 			cherry::Move("e4e6"),
 			cherry::Move("e4g4"),
-		},
-		.captures = {
 			cherry::Move("e4e7"),
-		},
-		.others = {
 			// King moves
 			cherry::Move("c4b5"),
 			cherry::Move("c4c5"),
@@ -109,14 +94,10 @@ cherry::test::Test moveBishop("MoveBishop", [](cherry::test::TestRunner& runner)
 	cherry::Board const board("8/3P4/6k1/5b2/2K5/8/8/8 b - - 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.checks = {
+		.others = {
 			cherry::Move("f5e6"),
 			cherry::Move("f5d3"),
-		},
-		.captures = {
 			cherry::Move("f5d7"),
-		},
-		.others = {
 			// King moves
 			cherry::Move("g6f7"),
 			cherry::Move("g6g7"),
@@ -141,17 +122,13 @@ cherry::test::Test moveQueen("MoveQueen", [](cherry::test::TestRunner& runner) {
 	cherry::Board const board("8/8/6k1/8/2K3p1/8/2p1Q3/8 w - - 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.checksAndCaptures = {
+		.others = {
 			cherry::Move("e2c2"),
 			cherry::Move("e2g4"),
-		},
-		.checks = {
 			cherry::Move("e2e4"),
 			cherry::Move("e2e6"),
 			cherry::Move("e2e8"),
 			cherry::Move("e2d3"),
-		},
-		.others = {
 			// King moves
 			cherry::Move("c4b5"),
 			cherry::Move("c4c5"),
@@ -248,16 +225,12 @@ cherry::test::Test moveWhitePawnCaptures("MoveWhitePawnCaptures", [](cherry::tes
 	cherry::Board const board("8/8/6k1/pp4pp/PP4PP/K7/8/8 w - - 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.checksAndCaptures = {
+		.others = {
 			cherry::Move("g4h5"),
-		},
-		.captures = {
 			// Pawn moves
 			cherry::Move("a4b5"),
 			cherry::Move("b4a5"),
-			cherry::Move("h4g5")
-		},
-		.others = {
+			cherry::Move("h4g5"),
 			// King moves
 			cherry::Move("a3b3"),
 			cherry::Move("a3a2"),
@@ -272,19 +245,13 @@ cherry::test::Test moveWhitePromotion("MoveWhitePromotion", [](cherry::test::Tes
 	cherry::Board const board("5n2/4P3/6k1/8/2K5/8/8/8 w - - 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.checksAndCaptures = {
+		.others = {
 			cherry::Move("e7f8n"),
-		},
-		.checks = {
 			cherry::Move("e7e8q"),
 			cherry::Move("e7e8b"),
-		},
-		.captures = {
 			cherry::Move("e7f8q"),
 			cherry::Move("e7f8r"),
-			cherry::Move("e7f8b")
-		},
-		.others = {
+			cherry::Move("e7f8b"),
 			// King moves
 			cherry::Move("c4b5"),
 			cherry::Move("c4c5"),
@@ -307,10 +274,8 @@ cherry::test::Test moveWhiteEnPassant("MoveWhiteEnPassant", [](cherry::test::Tes
 	cherry::Board const board("8/8/6k1/4Pp2/2K5/8/8/8 w - f6 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.captures = {
-			cherry::Move("e5f6")
-		},
 		.others = {
+			cherry::Move("e5f6"),
 			// King moves
 			cherry::Move("c4b5"),
 			cherry::Move("c4c5"),
@@ -363,10 +328,8 @@ cherry::test::Test movesCastling("MoveCastling", [](cherry::test::TestRunner& ru
 	cherry::Board const board("8/8/6k1/8/8/7p/7P/4K2R w K - 0 1");
 	auto moves = cherry::availableMoves(board);
 	cherry::MoveEnumerationResult expectedMoves = {
-		.checks = {
-			cherry::Move("h1g1"),
-		},
 		.others = {
+			cherry::Move("h1g1"),
 			// King moves
 			cherry::Move("e1d1"),
 			cherry::Move("e1d2"),
