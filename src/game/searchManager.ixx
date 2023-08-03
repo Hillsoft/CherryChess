@@ -37,8 +37,8 @@ export namespace cherry {
 
 		void go(std::optional<int> wTime, std::optional<int> bTime) {
 			std::optional<int> m_time = currentPosition_.whiteToPlay_ ? wTime : bTime;
-			// Crudely assume there will be another 20 moves and we should use our time evenly
-			int allowedTime = m_time.has_value() ? (*m_time / 20) : 100;
+			// Crudely assume there will be another 30 moves and we should use our time evenly
+			int allowedTime = m_time.has_value() ? (*m_time / 30) : 1000;
 
 			worker_.reset();
 			workerThread_ = std::jthread([this]() {
