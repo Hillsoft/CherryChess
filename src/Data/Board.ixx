@@ -221,16 +221,16 @@ export namespace cherry {
 				blackKingsideCastle_ = false;
 				blackQueensideCastle_ = false;
 			}
-			if (m.from_ == SquareIndex("a1")) {
+			if (m.from_ == SquareIndex("a1") || m.to_ == SquareIndex("a1")) {
 				whiteQueensideCastle_ = false;
 			}
-			if (m.from_ == SquareIndex("h1")) {
+			if (m.from_ == SquareIndex("h1") || m.to_ == SquareIndex("h1")) {
 				whiteKingsideCastle_ = false;
 			}
-			if (m.from_ == SquareIndex("a8")) {
+			if (m.from_ == SquareIndex("a8") || m.to_ == SquareIndex("a8")) {
 				blackQueensideCastle_ = false;
 			}
-			if (m.from_ == SquareIndex("h8")) {
+			if (m.from_ == SquareIndex("h8") || m.to_ == SquareIndex("h8")) {
 				blackKingsideCastle_ = false;
 			}
 
