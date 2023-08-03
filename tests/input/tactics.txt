@@ -12,6 +12,10 @@ e5d3
 1rrk1q2/3Bp3/1pR5/1K1Q4/8/8/8/8 w - - 0 1
 d7e6
 
+=Mate in 5
+7k/6pp/8/8/2rrrr2/8/8/R6K w - - 0 1
+a1a8
+
 =Fork
 2q3k1/pp3pp1/2p4p/3R4/8/8/PP3PP1/3R2K1 w - - 0 1
 d5d8
