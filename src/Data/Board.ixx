@@ -339,6 +339,37 @@ export namespace cherry {
 			return result;
 		}
 
+		size_t hash() const {
+			size_t seed = 0;
+
+			auto addHash([&](auto item) {
+				std::hash<decltype(item)> hasher;
+				seed ^= hasher(item) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+				});
+
+			for (const auto& piece : data_) {
+				addHash(piece);
+			}
+
+			addHash(whiteToPlay_);
+			addHash(whiteKingsideCastle_);
+			addHash(whiteQueensideCastle_);
+			addHash(blackKingsideCastle_);
+			addHash(blackQueensideCastle_);
+			addHash(enPassantTarget_.getRawIndex());
+			return seed;
+		}
+
+		bool transpositionEq(Board const& other) {
+			return data_ == other.data_
+				&& whiteToPlay_ == other.whiteToPlay_
+				&& whiteKingsideCastle_ == other.whiteKingsideCastle_
+				&& whiteQueensideCastle_ == other.whiteQueensideCastle_
+				&& blackKingsideCastle_ == other.blackKingsideCastle_
+				&& blackQueensideCastle_ == other.blackQueensideCastle_
+				&& enPassantTarget_ == other.enPassantTarget_;
+		}
+
 		std::array<Piece, 64> data_;
 
 		bool whiteToPlay_ = true;

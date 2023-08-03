@@ -18,6 +18,8 @@ export namespace cherry {
 		constexpr Evaluation(MateTag /* tag */, bool myMate, short distance)
 			: value_(distance), myMate_(myMate), isMate_(true) {}
 
+		bool operator==(Evaluation const& other) const = default;
+
 		constexpr auto operator<=>(Evaluation const& other) const {
 			if (isMate_ && !myMate_) {
 				if (other.isMate_ && !other.myMate_) {

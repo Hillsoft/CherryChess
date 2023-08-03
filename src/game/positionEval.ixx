@@ -44,10 +44,10 @@ export namespace cherry {
 
 		if (isInCheck(position)) {
 			if (position.whiteToPlay_) {
-				// runningTotal -= 200;
+				runningTotal -= 200;
 			}
 			else {
-				// runningTotal += 200;
+				runningTotal += 200;
 			}
 		}
 
