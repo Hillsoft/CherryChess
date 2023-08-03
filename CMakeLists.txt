@@ -7,15 +7,19 @@ message("VERSION=${CMAKE_VERSION}")
 
 if (CMAKE_VERSION VERSION_LESS "3.26")
     # 3.25
+    message("Using CMake experimental for 3.25")
     set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "3c375311-a3c9-4396-a187-3227ef642046")
 elseif (CMAKE_VERSION VERSION_LESS "3.27")
     # 3.26
+    message("Using CMake experimental for 3.26")
     set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "2182bf5c-ef0d-489a-91da-49dbc3090d2a")
 elseif (CMAKE_VERSION VERSION_LESS "3.27.1")
     # 3.27.0
+    message("Using CMake experimental for 3.27.0")
     set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "aa1f7df0-828a-4fcd-9afc-2dc80491aca7")
 elseif (CMAKE_VERSION VERSION_LESS "3.28")
     # 3.27.1
+    message("Using CMake experimental for 3.27.1")
     set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "bf70d4b0-9fb7-465c-9803-34014e70d112")
 endif()
 set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP ON)
