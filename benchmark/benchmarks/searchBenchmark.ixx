@@ -14,7 +14,7 @@ void run(std::string_view name, cherry::Board board) {
 	cherry::benchmark::runBenchmark(name, [&]() {
 		cherry::SearchWorker searcher;
 		cherry::InlineStack<cherry::Board, 512> history;
-		searcher.iterativeDeepening(board, history, cherry::worstEval, cherry::bestEval, 4);
+		searcher.iterativeDeepening(board, history, cherry::worstEval, cherry::bestEval, 5);
 		});
 }
 
