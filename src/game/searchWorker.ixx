@@ -116,18 +116,30 @@ export namespace cherry {
 				return getGlobalTranspositionTable().insert(rootPosition, result);
 			}
 
-			for (int subDepth = 0; subDepth <= maxExtensionDepth - 1; subDepth++) {
+			for (auto & [eval, move] : possibleMoves) {
+				Board resultingPosition = rootPosition;
+				resultingPosition.makeMove(move);
+				SearchResult recursiveResult = recursiveSearch(resultingPosition, history, worstEval, bestEval, 0, 0, false);
+				recursiveResult.eval_.step();
+				eval = recursiveResult.eval_;
+			}
+			std::sort(possibleMoves.begin(), possibleMoves.end(), [](auto& a, auto& b) { return a.first.low_ > b.first.low_; });
+			if (maxDepth <= 0) {
+				// We are in search extension, only keep the most interesting moves
+				possibleMoves.resize(std::min<size_t>(3, possibleMoves.size()));
+			}
+			if (maxExtensionDepth > 1) {
 				Evaluation alpha = baseAlpha;
 				bool prune = false;
-				for (auto & [eval, move] : possibleMoves) {
+				for (auto& [eval, move] : possibleMoves) {
 					if (!prune) {
 						Board resultingPosition = rootPosition;
 						resultingPosition.makeMove(move);
-						SearchResult recursiveResult = recursiveSearch(resultingPosition, history, unstep(baseBeta), unstep(alpha), subDepth - (maxExtensionDepth - maxDepth), subDepth, false);
+						SearchResult recursiveResult = recursiveSearch(resultingPosition, history, unstep(baseBeta), unstep(alpha), maxDepth - 1, maxExtensionDepth - 1, false);
 						recursiveResult.eval_.step();
 						eval = recursiveResult.eval_;
 
-						if (subDepth > 0 && eval.low_ >= baseBeta) {
+						if (eval.low_ >= baseBeta) {
 							prune = true;
 						}
 						if (eval.low_ > alpha) {
@@ -139,11 +151,8 @@ export namespace cherry {
 					}
 				}
 				std::sort(possibleMoves.begin(), possibleMoves.end(), [](auto& a, auto& b) { return a.first.low_ > b.first.low_; });
-				if (subDepth == 0 && maxDepth <= 0) {
-					// We are in search extension, only keep the most interesting moves
-					possibleMoves.resize(std::min<size_t>(3, possibleMoves.size()));
-				}
 			}
+
 			std::optional<SearchResult> result;
 			if (maxDepth <= 0) {
 				SearchResult stopResult(maxExtensionDepth, EvaluationRange(evaluatePosition(rootPosition)), {});
