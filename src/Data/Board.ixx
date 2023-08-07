@@ -182,6 +182,12 @@ export namespace cherry {
 		constexpr Board()
 			: Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {}
 
+		constexpr Board(Board const& other) = default;
+		constexpr Board(Board&& other) = default;
+
+		constexpr Board& operator=(Board const& other) = default;
+		constexpr Board& operator=(Board&& other) = default;
+
 		constexpr auto operator<=>(Board const& other) const = default;
 
 		constexpr Piece at(SquareIndex i) const {

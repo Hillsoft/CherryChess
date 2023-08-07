@@ -8,14 +8,20 @@ export namespace cherry {
 
 	class EvaluationRange {
 	public:
-		EvaluationRange()
+		constexpr EvaluationRange()
 			: low_(worstEval), high_(bestEval) {}
 
-		explicit EvaluationRange(Evaluation eval)
+		explicit constexpr EvaluationRange(Evaluation eval)
 			: low_(eval), high_(eval) {}
 
-		EvaluationRange(Evaluation low, Evaluation high)
+		constexpr EvaluationRange(Evaluation low, Evaluation high)
 			: low_(low), high_(high) {}
+
+		constexpr EvaluationRange(EvaluationRange const& other) = default;
+		constexpr EvaluationRange(EvaluationRange&& other) = default;
+
+		constexpr EvaluationRange& operator=(EvaluationRange const& other) = default;
+		constexpr EvaluationRange& operator=(EvaluationRange&& other) = default;
 
 		void join(EvaluationRange const& other) {
 			low_ = std::max(low_, other.low_);
