@@ -15,8 +15,8 @@ export namespace cherry {
 	class Board {
 	public:
 		constexpr explicit Board(std::string_view fen) {
-			size_t i;
-			size_t row = 0;
+			char i;
+			char row = 0;
 
 			auto pullChar = [&]() {
 				if (fen.size() == 0)
@@ -43,7 +43,7 @@ export namespace cherry {
 				char currentPiece = pullChar();
 				if ('0' <= currentPiece && currentPiece <= '9') {
 					// We have a skip
-					for (size_t j = 0; j < currentPiece - '0'; j++) {
+					for (char j = 0; j < currentPiece - '0'; j++) {
 						pushSquare(Piece::PieceNone);
 					}
 				}
