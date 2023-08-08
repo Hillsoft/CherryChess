@@ -6,6 +6,7 @@ export module cherry.board;
 
 import std;
 
+import cherry.bitwiseHash;
 import cherry.move;
 import cherry.piece;
 import cherry.squareIndex;
@@ -346,24 +347,7 @@ export namespace cherry {
 		}
 
 		size_t hash() const {
-			size_t seed = 0;
-
-			auto addHash([&](auto item) {
-				std::hash<decltype(item)> hasher;
-				seed ^= hasher(item) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-				});
-
-			for (const auto& piece : data_) {
-				addHash(piece);
-			}
-
-			addHash(whiteToPlay_);
-			addHash(whiteKingsideCastle_);
-			addHash(whiteQueensideCastle_);
-			addHash(blackKingsideCastle_);
-			addHash(blackQueensideCastle_);
-			addHash(enPassantTarget_.getRawIndex());
-			return seed;
+			return bitwiseHash((char*)&data_, (char*)(&enPassantTarget_ + 1));
 		}
 
 		bool transpositionEq(Board const& other) {
