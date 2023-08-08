@@ -9,11 +9,11 @@ import cherry.searchWorker;
 
 cherry::Board currentBoard;
 std::tuple<cherry::Evaluation, cherry::Move> result = std::tuple(cherry::Evaluation(cherry::Evaluation::CPTag(), 0), cherry::Move());
+cherry::InlineStack<cherry::Board, 512> history;
 
 void run(std::string_view name, cherry::Board board) {
 	cherry::benchmark::runBenchmark(name, [&]() {
 		cherry::SearchWorker searcher;
-		cherry::InlineStack<cherry::Board, 512> history;
 		searcher.iterativeDeepening(board, history, cherry::worstEval, cherry::bestEval, 5);
 		});
 }
