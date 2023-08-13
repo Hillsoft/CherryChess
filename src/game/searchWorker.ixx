@@ -85,7 +85,7 @@ export namespace cherry {
 			nodesVisited_.store(nodesVisited_.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 
 			std::optional<SearchResult> m_result = getGlobalTranspositionTable().lookup(rootPosition);
-			if (m_result.has_value() && m_result->depth_ >= maxExtensionDepth) {
+			if (m_result.has_value() && m_result->depth_ == maxExtensionDepth) {
 				// if (m_result->eval_.low_ >= baseBeta || m_result->eval_.low_ == m_result->eval_.high_) {
 				if (m_result->eval_.type_ == EvalExact) {
 					return *m_result;
