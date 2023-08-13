@@ -44,6 +44,10 @@ export namespace cherry {
 			return std::string(data.data());
 		}
 
+		constexpr SquareIndex flipVertical() const {
+			return SquareIndex(8 * (7 - rawIndex_ / 8) + rawIndex_ % 8);
+		}
+
 	private:
 		char rawIndex_;
 	};
