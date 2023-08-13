@@ -6,16 +6,19 @@ import cherry.evaluation;
 
 export namespace cherry {
 
+	enum EvalType {
+		EvalExact = 0,
+		EvalLowerBound = 1,
+		EvalUpperBound = 2,
+	};
+
 	class EvaluationRange {
 	public:
 		constexpr EvaluationRange()
-			: low_(worstEval), high_(bestEval) {}
+			: value_(worstEval), type_(EvalLowerBound) {}
 
-		explicit constexpr EvaluationRange(Evaluation eval)
-			: low_(eval), high_(eval) {}
-
-		constexpr EvaluationRange(Evaluation low, Evaluation high)
-			: low_(low), high_(high) {}
+		constexpr EvaluationRange(Evaluation eval, EvalType type)
+			: value_(eval), type_(type) {}
 
 		constexpr EvaluationRange(EvaluationRange const& other) = default;
 		constexpr EvaluationRange(EvaluationRange&& other) = default;
@@ -24,20 +27,21 @@ export namespace cherry {
 		constexpr EvaluationRange& operator=(EvaluationRange&& other) = default;
 
 		void join(EvaluationRange const& other) {
-			low_ = std::max(low_, other.low_);
-			high_ = std::min(high_, other.high_);
+			*this = other;
 		}
 
 		void step() {
-			Evaluation tmp = low_;
-			low_ = high_;
-			high_ = tmp;
-			low_.step();
-			high_.step();
+			value_.step();
+			if (type_ == EvalLowerBound) {
+				type_ = EvalUpperBound;
+			}
+			else if (type_ == EvalUpperBound) {
+				type_ = EvalLowerBound;
+			}
 		}
 
-		Evaluation low_;
-		Evaluation high_;
+		Evaluation value_;
+		EvalType type_;
 	};
 
 } // namespace cherry

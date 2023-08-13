@@ -28,14 +28,14 @@ export namespace cherry {
 		template <size_t historySize>
 		void iterativeDeepening(Board const& rootPosition, InlineStack<Board, historySize>& history, Evaluation baseAlpha = worstEval, Evaluation baseBeta = bestEval, int maxDepthLimit = 50) {
 			InlineStackWriter(history, rootPosition);
-			std::vector<std::pair<Move, Evaluation>> topLevelMoves;
+			std::vector<std::tuple<Move, Evaluation, std::vector<Move>>> topLevelMoves;
 
 			{
 				MoveEnumerationResult enumeration = availableMoves(rootPosition);
 				topLevelMoves.reserve(enumeration.others.size());
 
 				for (auto const& move : enumeration.others) {
-					topLevelMoves.emplace_back(move, Evaluation());
+					topLevelMoves.emplace_back(move, Evaluation(), std::vector<Move>{});
 				}
 			}
 
@@ -45,22 +45,32 @@ export namespace cherry {
 
 				Evaluation alpha = baseAlpha;
 
-				for (auto& [move, eval] : topLevelMoves) {
+				for (auto& [move, eval, line] : topLevelMoves) {
 					Board newPosition = rootPosition;
 					newPosition.makeMove(move);
 
 					SearchResult result = recursiveSearch(newPosition, history, unstep(baseBeta), unstep(alpha), maxDepth - 1, maxDepth + 2 - 1, false);
-					eval = step(result.eval_.low_);
+					eval = step(result.eval_.value_);
 					if (eval > alpha) {
 						alpha = eval;
 					}
+					line = std::move(result.line_);
+					line.push_back(move);
 				}
-				std::sort(topLevelMoves.begin(), topLevelMoves.end(), [](auto& a, auto& b) { return a.second > b.second; });
+				std::sort(topLevelMoves.begin(), topLevelMoves.end(), [](auto& a, auto& b) { return std::get<1>(a) > std::get<1>(b); });
 				// We don't trust partial results...
 				if (!shouldStop_.load(std::memory_order_seq_cst)) {
-					eval_.store(topLevelMoves[0].second, std::memory_order_relaxed);
-					bestMove_.store(topLevelMoves[0].first, std::memory_order_relaxed);
+					eval_.store(std::get<1>(topLevelMoves[0]), std::memory_order_relaxed);
+					bestMove_.store(std::get<0>(topLevelMoves[0]), std::memory_order_relaxed);
 					depth_.store(maxDepth, std::memory_order_relaxed);
+					std::cout << "info pv ";
+					auto const& line = std::get<2>(topLevelMoves[0]);
+					for (size_t i = line.size() - 1; i < line.size() && i >= 0; i--) {
+						std::cout << std::format("{}", line[i]) << " ";
+					}
+					std::cout << std::get<1>(topLevelMoves[0]);
+					std::cout << " depth " << depth_;
+					std::cout << std::endl;
 				}
 			}
 			complete_.store(true, std::memory_order_release);
@@ -69,14 +79,21 @@ export namespace cherry {
 		template <size_t historySize>
 		SearchResult recursiveSearch(Board const& rootPosition, InlineStack<Board, historySize>& history, Evaluation baseAlpha, Evaluation baseBeta, int maxDepth, int maxExtensionDepth, bool topLevel = true) {
 			if (shouldStop_.load(std::memory_order_seq_cst)) {
-				return SearchResult(0, EvaluationRange(worstEval), Move());
+				return SearchResult(0, EvaluationRange(worstEval, EvalLowerBound), Move(), {});
 			}
 
 			nodesVisited_.store(nodesVisited_.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
 
 			std::optional<SearchResult> m_result = getGlobalTranspositionTable().lookup(rootPosition);
 			if (m_result.has_value() && m_result->depth_ >= maxExtensionDepth) {
-				if (m_result->eval_.low_ >= baseBeta || m_result->eval_.low_ == m_result->eval_.high_) {
+				// if (m_result->eval_.low_ >= baseBeta || m_result->eval_.low_ == m_result->eval_.high_) {
+				if (m_result->eval_.type_ == EvalExact) {
+					return *m_result;
+				}
+				if (m_result->eval_.type_ == EvalLowerBound && m_result->eval_.value_ >= baseBeta) {
+					return *m_result;
+				}
+				if (m_result->eval_.type_ == EvalUpperBound && m_result->eval_.value_ <= baseAlpha) {
 					return *m_result;
 				}
 			}
@@ -89,17 +106,17 @@ export namespace cherry {
 				}
 			}
 			if (repetitionCount >= 1) {
-				return SearchResult(0, EvaluationRange(Evaluation(Evaluation::CPTag(), 0)), Move());
+				return SearchResult(0, EvaluationRange(Evaluation(Evaluation::CPTag(), 0), EvalExact), Move(), {});
 			}
 
 			InlineStackWriter(history, rootPosition);
 
 			if (maxExtensionDepth <= 0) {
-				SearchResult result(0, EvaluationRange(evaluatePosition(rootPosition)), Move());
+				SearchResult result(0, EvaluationRange(evaluatePosition(rootPosition), EvalExact), Move(), {});
 				return getGlobalTranspositionTable().insert(rootPosition, result);
 			}
 
-			std::vector<std::pair<EvaluationRange, Move>> possibleMoves;
+			std::vector<std::tuple<EvaluationRange, Move, std::vector<Move>>> possibleMoves;
 			{
 				MoveEnumerationResult enumeration = availableMoves(rootPosition);
 
@@ -107,71 +124,72 @@ export namespace cherry {
 				possibleMoves.reserve(enumeration.others.size());
 
 				for (auto const& move : enumeration.others) {
-					possibleMoves.emplace_back(EvaluationRange(), move);
+					possibleMoves.emplace_back(EvaluationRange(), move, std::vector<Move>{});
 				}
 			}
 
 			if (possibleMoves.size() == 0) {
-				SearchResult result(9999, EvaluationRange(terminalEval(rootPosition)), {});
+				SearchResult result(9999, EvaluationRange(terminalEval(rootPosition), EvalExact), Move(), {});
 				return getGlobalTranspositionTable().insert(rootPosition, result);
 			}
 
-			for (auto & [eval, move] : possibleMoves) {
+			for (auto & [eval, move, line] : possibleMoves) {
 				Board resultingPosition = rootPosition;
 				resultingPosition.makeMove(move);
 				SearchResult recursiveResult = recursiveSearch(resultingPosition, history, worstEval, bestEval, 0, 0, false);
 				recursiveResult.eval_.step();
 				eval = recursiveResult.eval_;
+				line = std::move(recursiveResult.line_);
+				line.push_back(move);
 			}
-			std::sort(possibleMoves.begin(), possibleMoves.end(), [](auto& a, auto& b) { return a.first.low_ > b.first.low_; });
+			std::sort(possibleMoves.begin(), possibleMoves.end(), [](auto& a, auto& b) { return std::get<0>(a).value_ > std::get<0>(b).value_; });
 			if (maxDepth <= 0) {
 				// We are in search extension, only keep the most interesting moves
-				possibleMoves.resize(std::min<size_t>(3, possibleMoves.size()));
+				possibleMoves.resize(std::min<size_t>(5, possibleMoves.size()));
 			}
 			if (maxExtensionDepth > 1) {
 				Evaluation alpha = baseAlpha;
 				bool prune = false;
-				for (auto& [eval, move] : possibleMoves) {
+				for (auto& [eval, move, line] : possibleMoves) {
 					if (!prune) {
 						Board resultingPosition = rootPosition;
 						resultingPosition.makeMove(move);
 						SearchResult recursiveResult = recursiveSearch(resultingPosition, history, unstep(baseBeta), unstep(alpha), maxDepth - 1, maxExtensionDepth - 1, false);
 						recursiveResult.eval_.step();
 						eval = recursiveResult.eval_;
+						line = std::move(recursiveResult.line_);
+						line.push_back(move);
 
-						if (eval.low_ >= baseBeta) {
+						if (eval.value_ >= baseBeta && maxDepth > 0) {
 							prune = true;
 						}
-						if (eval.low_ > alpha) {
-							alpha = eval.low_;
+						if (eval.value_ > alpha) {
+							alpha = eval.value_;
 						}
 					}
 					else {
 						eval = EvaluationRange();
 					}
 				}
-				std::sort(possibleMoves.begin(), possibleMoves.end(), [](auto& a, auto& b) { return a.first.low_ > b.first.low_; });
+				std::sort(possibleMoves.begin(), possibleMoves.end(), [](auto& a, auto& b) { return std::get<0>(a).value_ > std::get<0>(b).value_; });
 			}
 
 			std::optional<SearchResult> result;
 			if (maxDepth <= 0) {
-				SearchResult stopResult(maxExtensionDepth, EvaluationRange(evaluatePosition(rootPosition)), {});
-				if (stopResult.eval_.low_ > possibleMoves[0].first.low_) {
+				SearchResult stopResult(maxExtensionDepth, EvaluationRange(evaluatePosition(rootPosition), EvalExact), Move(), {});
+				if (stopResult.eval_.value_ > std::get<0>(possibleMoves[0]).value_) {
 					result = stopResult;
 				}
 			}
 			if (!result.has_value()) {
-				EvaluationRange evalRange = possibleMoves[0].first;
-				if (evalRange.low_ >= baseBeta) {
-					// We exited early due to pruning so do not have a precise eval
-					evalRange.high_ = bestEval;
-				}
-				result = SearchResult(maxExtensionDepth, evalRange, possibleMoves[0].second);
+				EvaluationRange evalRange = std::get<0>(possibleMoves[0]);
+				result = SearchResult(maxExtensionDepth, evalRange, std::get<1>(possibleMoves[0]), std::get<2>(possibleMoves[0]));
 			}
-			for (auto& [eval, _] : possibleMoves) {
-				if (eval.high_ > result->eval_.high_) {
-					result->eval_.high_ = eval.high_;
-				}
+			if (result->eval_.value_ <= baseAlpha && maxDepth > 0) {
+				result->eval_.type_ = EvalUpperBound;
+			}
+			if (result->eval_.value_ >= baseBeta && maxDepth > 0) {
+				result->eval_.type_ = EvalLowerBound;
 			}
 
 			if (shouldStop_.load(std::memory_order_seq_cst)) {
